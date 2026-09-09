@@ -273,6 +273,7 @@ export function clearAllData() {
   const r2 = safeRemove(DRAFTS_KEY);
   safeRemove(LEGACY_DRAFT_KEY);
   safeRemove(CORRUPT_KEY);
+  safeRemove("noteapp:recents:v1"); // RECENTS_KEY (kept literal to avoid a storage-layer import cycle)
   notesCache = null;
   draftsCache = null;
   return r1.ok && r2.ok;

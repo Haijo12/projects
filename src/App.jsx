@@ -7,6 +7,7 @@ import Settings from "./components/Settings.jsx";
 import Trash from "./components/Trash.jsx";
 import CommandMenu, { buildPaletteCommands } from "./components/CommandMenu.jsx";
 import { getNote } from "./storage/notesStore.js";
+import { pushRecent } from "./storage/recentsStore.js";
 import { generateId } from "./utils/format.js";
 import { saveNote } from "./storage/notesStore.js";
 import { extractTags } from "./utils/tags.js";
@@ -61,7 +62,10 @@ export default function App() {
     };
   }, []);
 
-  const openNote = useCallback((note) => navigate("note", note.id), []);
+  const openNote = useCallback((note) => {
+    pushRecent(note.id);
+    navigate("note", note.id);
+  }, []);
 
   const createNote = useCallback(() => {
     const now = Date.now();
@@ -80,6 +84,7 @@ export default function App() {
     };
     saveNote(note);
     notes.refresh();
+    pushRecent(note.id);
     navigate("note", note.id);
     // Focus the textarea after navigation
     setTimeout(() => {
@@ -106,6 +111,7 @@ export default function App() {
       };
       saveNote(note);
       notes.refresh();
+      pushRecent(note.id);
       navigate("note", note.id);
     },
     [notes]

@@ -22,6 +22,15 @@
   flex: 1;
 }
 
+/* Brand mark in the home header */
+.app-logo {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-left: -2px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-1);
+}
+
 /* Expanded search row (replaces the whole header while searching) */
 .search-field-row {
   display: flex;
@@ -104,14 +113,14 @@
 
 .chip {
   flex-shrink: 0;
-  height: 32px;
-  padding: 0 12px;
+  height: 34px;
+  padding: 0 14px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   border-radius: var(--radius-full);
-  background: var(--surface-2);
-  border: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
   color: var(--text-2);
   font-size: var(--fs-small);
   font-weight: 500;
@@ -123,6 +132,7 @@
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-contrast);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .chip .chip-count {
@@ -132,7 +142,8 @@
 
 /* ===== Section labels ===== */
 .section-label {
-  padding: 14px 16px 6px;
+  padding: 0 4px;
+  margin-top: var(--space-2);
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -140,11 +151,16 @@
   color: var(--text-3);
 }
 
-/* ===== Note list — flat items with hairline separators ===== */
+.section-label:first-child {
+  margin-top: var(--space-1);
+}
+
+/* ===== Note list — modern cards ===== */
 .note-list {
-  padding: 0 0 calc(88px + env(safe-area-inset-bottom, 0px));
+  padding: var(--space-2) var(--space-4) calc(96px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
+  gap: var(--space-3);
 }
 
 .note-item {
@@ -152,14 +168,13 @@
   display: block;
   width: 100%;
   text-align: left;
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--border);
-  transition: background var(--motion-fast);
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  transition: background var(--motion-fast), border-color var(--motion-fast);
   overflow: hidden;
-}
-
-.note-item:last-child {
-  border-bottom: none;
 }
 
 .note-item:active {
@@ -167,7 +182,11 @@
 }
 
 .note-item.compact {
-  padding: var(--space-2) var(--space-4);
+  padding: 10px 16px;
+}
+
+.note-item.is-pinned {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
 }
 
 .note-item-title {
@@ -237,6 +256,83 @@
   padding: 2px 8px;
 }
 
+/* ===== Recently opened — quick jump-back row ===== */
+.recent-section {
+  padding: var(--space-3) 0 var(--space-1);
+}
+
+.recent-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 calc(var(--space-4) + 4px) var(--space-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+}
+
+.recent-row {
+  display: flex;
+  gap: 10px;
+  padding: 0 var(--space-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.recent-row::-webkit-scrollbar {
+  display: none;
+}
+
+.recent-card {
+  flex-shrink: 0;
+  width: 156px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
+  text-align: left;
+  transition: background var(--motion-fast), transform var(--motion-fast);
+}
+
+.recent-card:active {
+  background: var(--surface-2);
+  transform: scale(0.97);
+}
+
+.recent-card-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.recent-card-title {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.recent-card-time {
+  font-size: var(--fs-meta);
+  color: var(--text-3);
+}
+
 /* Swipe actions */
 .note-item-actions {
   position: absolute;
@@ -246,6 +342,8 @@
   display: flex;
   align-items: center;
   background: var(--surface-2);
+  border-left: 1px solid var(--border);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
   padding-left: var(--space-2);
   gap: 2px;
 }
@@ -412,9 +510,9 @@
 }
 
 .capsule-toggle button[aria-selected="true"] {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-1);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .save-state {
@@ -665,6 +763,8 @@
   max-width: 560px;
   max-height: 70dvh;
   background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
   box-shadow: var(--shadow-2);
@@ -775,6 +875,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  box-shadow: var(--shadow-1);
 }
 
 .settings-group-title {
@@ -846,19 +947,22 @@
   box-shadow: var(--shadow-1);
 }
 
-/* Toggle switch */
+/* Toggle switch — the state class is the ONLY visual source of truth:
+   SettingToggle renders `className={"switch" + (checked ? " checked" : "")}`,
+   so track color and knob position always mirror the `checked` prop.
+   No native checkbox state (":checked") is involved. */
 .switch {
   position: relative;
   width: 48px;
   height: 28px;
   border-radius: var(--radius-full);
-  background: var(--border-strong);
+  background: var(--surface-3); /* OFF track */
   transition: background var(--motion-fast);
   flex-shrink: 0;
 }
 
-.switch[aria-checked="true"] {
-  background: var(--accent);
+.switch.checked {
+  background: var(--accent); /* ON track */
 }
 
 .switch::after {
@@ -874,8 +978,14 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
-.switch[aria-checked="true"]::after {
-  transform: translateX(20px);
+.switch.checked::after {
+  transform: translateX(20px); /* knob fully right (48 - 3 - 22 - 3 = 20) */
+}
+
+/* The whole row is the tap target (the <button>); decorative children
+   must never intercept taps on Android/iOS. */
+.setting-row[role="switch"] > * {
+  pointer-events: none;
 }
 
 /* Accent swatches */
@@ -893,15 +1003,25 @@
   position: relative;
 }
 
-.accent-swatch[aria-pressed="true"] {
-  border-color: var(--text);
+.accent-swatch {
+  transition: transform var(--motion-fast), box-shadow var(--motion-fast);
 }
 
-.accent-swatch.orange { background: #d96a3b; }
-.accent-swatch.blue { background: #3b82d9; }
-.accent-swatch.green { background: #3a9d63; }
-.accent-swatch.purple { background: #8b6bd9; }
-.accent-swatch.pink { background: #d9527e; }
+.accent-swatch:active {
+  transform: scale(0.92);
+}
+
+.accent-swatch[aria-pressed="true"] {
+  border-color: var(--surface);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text);
+}
+
+.accent-swatch.violet,
+.accent-swatch.purple { background: #7c3aed; }
+.accent-swatch.blue { background: #2563eb; }
+.accent-swatch.green { background: #059669; }
+.accent-swatch.pink { background: #db2777; }
+.accent-swatch.orange { background: #ea580c; }
 
 /* ===== Empty state ===== */
 .empty-state {
@@ -952,6 +1072,7 @@
   width: 100%;
   max-width: 400px;
   background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 20px;
   box-shadow: var(--shadow-2);

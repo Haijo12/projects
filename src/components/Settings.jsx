@@ -98,7 +98,7 @@ export default function Settings({ settings, onSettingsChange, onBack, onOpenTra
             <div className="setting-row">
               <span className="row-label">Accent</span>
               <div className="accent-row" style={{ padding: 0 }}>
-                {["orange", "blue", "green", "purple", "pink"].map((a) => (
+                {["violet", "blue", "green", "pink", "orange"].map((a) => (
                   <button
                     key={a}
                     type="button"
@@ -321,7 +321,7 @@ function SettingToggle({ label, desc, checked, onChange }) {
         <span className="row-label" style={{ display: "block" }}>{label}</span>
         {desc && <span className="row-desc">{desc}</span>}
       </span>
-      <span className="switch" aria-hidden="true" />
+      <span className={`switch${checked ? " checked" : ""}`} aria-hidden="true" />
     </button>
   );
 }

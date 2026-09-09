@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import NoteCard from "./NoteCard.jsx";
 import TagFilter from "./TagFilter.jsx";
+import RecentRow from "./RecentRow.jsx";
 import EmptyState from "./EmptyState.jsx";
+import Logo from "./Logo.jsx";
 import { searchNotes } from "../utils/search.js";
 import { Search, Settings, ArrowLeft, X, Plus, FileText } from "lucide-react";
 
@@ -165,6 +167,9 @@ export default function HomeScreen({
           </div>
         ) : (
           <div className="app-header">
+            <span className="app-logo" aria-hidden="true">
+              <Logo size={26} />
+            </span>
             <h1>Notes</h1>
             <div className="header-actions">
               <button
@@ -224,6 +229,10 @@ export default function HomeScreen({
 
       <div className="screen-scroll">
         {resultCount && <div className="result-count">{resultCount}</div>}
+
+        {filter === "all" && !query.trim() && !activeTag && (
+          <RecentRow notes={notes.notes} onOpenNote={onOpenNote} />
+        )}
 
         {filtered.length === 0 ? (
           <EmptyState

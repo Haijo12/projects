@@ -4,7 +4,7 @@ const SETTINGS_KEY = "noteapp:settings:v1";
 
 export const DEFAULT_SETTINGS = {
   theme: "system", // light | dark | system
-  accent: "orange",
+  accent: "violet",
   fontSize: "medium", // small | medium | large
   compactList: false,
   autosave: true,

@@ -8,6 +8,11 @@ export default defineConfig(({ mode }) => ({
   // workflow. Everything else (local dev, other hosting) serves at "/".
   base: process.env.GITHUB_PAGES ? `/${repo}/` : "/",
   plugins: [react()],
+  server: {
+    host: true,
+    // Sandbox/cloud previews are proxied under random *.e2b.app hosts — allow them.
+    allowedHosts: true,
+  },
   build: {
     outDir: "dist",
     sourcemap: false,

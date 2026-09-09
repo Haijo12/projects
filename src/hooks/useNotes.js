@@ -14,6 +14,7 @@ import {
   subscribe,
 } from "../storage/notesStore.js";
 import { extractTags } from "../utils/tags.js";
+import { removeRecent } from "../storage/recentsStore.js";
 import { generateId, deriveTitleFromContent } from "../utils/format.js";
 import { searchNotes } from "../utils/search.js";
 import { findBacklinks } from "../utils/links.js";
@@ -136,13 +137,16 @@ export function useNotes() {
   const permanentDelete = useCallback(
     (id) => {
       deleteNotePermanently(id);
+      removeRecent(id);
       refresh();
     },
     [refresh]
   );
 
   const emptyTrashNow = useCallback(() => {
+    const ids = getAllNotes().filter((n) => n.deletedAt).map((n) => n.id);
     const removed = emptyTrash();
+    ids.forEach(removeRecent);
     refresh();
     return removed;
   }, [refresh]);

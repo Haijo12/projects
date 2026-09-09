@@ -45,11 +45,11 @@ export default function Trash({ notes, onRestore, onDeletePermanent, onEmptyTras
       <div className="screen-scroll">
         <div className="note-list">
           {notes.map((note) => (
-            <div key={note.id} className="note-card trash-note">
-              <div className="note-card-title">
-                <span className="note-card-title-text">{note.title || "Untitled Note"}</span>
+            <div key={note.id} className="note-item trash-note">
+              <div className="note-item-title">
+                <span className="note-item-title-text">{note.title || "Untitled Note"}</span>
               </div>
-              <div className="note-card-meta">
+              <div className="note-item-meta">
                 <span>Deleted {formatRelativeTime(note.deletedAt)}</span>
                 <span className="trash-row-actions">
                   <button

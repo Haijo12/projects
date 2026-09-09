@@ -39,28 +39,27 @@
   border-bottom: 1px solid var(--border);
 }
 
-/* FAB — thumb-friendly */
+/* FAB — thumb-friendly squircle with an accent glow */
 .fab {
   position: fixed;
   right: calc(16px + env(safe-area-inset-right, 0px));
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
   background: var(--accent);
   color: var(--accent-contrast);
-  font-size: 30px;
-  font-weight: 300;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-2);
+  box-shadow: var(--shadow-accent), var(--shadow-1);
   z-index: 30;
-  transition: transform var(--motion-fast);
+  transition: transform var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .fab:active {
-  transform: scale(0.94);
+  transform: scale(0.93);
+  box-shadow: var(--shadow-1);
 }
 
 /* 44px minimum touch targets */

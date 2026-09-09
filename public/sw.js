@@ -2,7 +2,7 @@
    Strategy: cache-first with background update; navigations fall back to
    the cached index.html so the app always opens offline. */
 
-const CACHE = "noteapp-v1";
+const CACHE = "noteapp-v2";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();

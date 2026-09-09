@@ -31,3 +31,6 @@ android/app/src/main/assets/capacitor.config.json
 *.njsproj
 *.sln
 *.sw?
+
+# npm lockfile — this repo standardizes on bun.lock
+package-lock.json
