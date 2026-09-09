@@ -2,40 +2,46 @@
 
 A fast, private, offline-first mobile note application.
 
-«Open → Write → Autosave → Close.» No account, no cloud, no tracking — your
+«Open -> Write -> Autosave -> Close.» No account, no cloud, no tracking — your
 notes live in your browser's local storage and nowhere else. Designed
 mobile-first (Android phones primarily), installable as a PWA.
 
 ## Features
 
-- ⚡ Instant note creation — tap **+** and start typing, no dialogs
-- 💾 Autosave (debounced) with draft recovery after reload/crash
-- 📝 Markdown-inspired markup with a custom lightweight parser
-- 👁 Edit / Preview capsule toggle (remembers your preference)
-- 🔍 Instant local search (titles, content, tags)
-- 🏷 Automatic `@tag` detection — tap a tag to filter
-- 📌 Pinning and ⭐ favorites (kept deliberately separate)
-- 📦 Archive and 🗑 Trash with restore + permanent-delete confirmation
-- 🔗 `[[Internal note links]]` with backlinks ("Linked from")
-- ⌨️ Slash commands (`/bold`, `/todo`, `/codeblock`, …)
-- 🛠 Quick insert toolbar (heading, bold, code, task, tag, link…)
-- 🌗 Light / Dark / System themes + accent colors + text size
-- 📤 Export/import backups (JSON, Markdown bundle, single-note .md)
-- 📱 Installable PWA — works fully offline
-- ♿ Accessibility: 44px touch targets, focus states, reduced motion
+- Instant note creation — tap **+** and start typing, no dialogs
+- Autosave (debounced) with draft recovery after reload/crash
+- Markdown-inspired markup with a custom lightweight parser
+- Edit / Preview capsule toggle (remembers your preference)
+- Instant local search (titles, content, tags)
+- Automatic `@tag` detection — tap a tag to filter
+- Pinning and favorites (kept deliberately separate)
+- Archive and Trash with restore + permanent-delete confirmation
+- `[[Internal note links]]` with backlinks ("Linked from")
+- Slash commands (`/bold`, `/todo`, `/codeblock`, ...)
+- Quick insert toolbar (heading, bold, code, task, tag, link...)
+- Light / Dark / System themes + accent colors + text size
+- Export/import backups (JSON, Markdown bundle, single-note .md)
+- Installable PWA — works fully offline
+- Accessibility: 44px touch targets, focus states, reduced motion
+
+Icons throughout the UI are provided by [Lucide](https://lucide.dev/) via
+`lucide-react` (see `src/components/icons.jsx`).
 
 ## Installation
 
+The repository is standardized on [Bun](https://bun.sh) (`bun.lock` is
+committed; `package-lock.json` is gitignored).
+
 ```bash
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 ## Build
 
 ```bash
-npm run build     # outputs to dist/
-npm run preview   # serve the production build locally
+bun run build     # outputs to dist/
+bun run preview   # serve the production build locally
 ```
 
 ## Markup Syntax
@@ -140,11 +146,11 @@ Computed locally — no server involved.
 
 ## Backups
 
-In **Settings → Data**:
+In **Settings -> Data**:
 
 - **Export all notes (JSON)** — full fidelity backup, best for re-import
 - **Export markdown bundle** — all notes as one `.md` file
-- **Export as Markdown** — single note, from the editor's ⋮ menu
+- **Export as Markdown** — single note, from the editor's more menu
 - **Import notes** — accepts JSON backups, Markdown, or plain text
 
 Imports are validated and merged without overwriting newer existing notes;
@@ -173,15 +179,48 @@ The same web app is packaged as an Android APK via [Capacitor](https://capacitor
 
 ```bash
 bun install                 # installs @capacitor/core, cli, android
-bun run build               # web build → dist/
+bun run build               # web build -> dist/
 bunx cap sync android       # copies dist/ into the Android project
 ```
 
-The Android project lives in `android/` (appId `com.haijo.notes`, app name "Notes").
+The Android project lives in `android/` (appId `com.haijo.notes`, app name
+"Notes").
+
+### Building the APK through GitHub Actions
+
+The APK is built by a GitHub Actions workflow named **Android APK**
+(`.github/workflows/android-apk.yml`). The artifact is the real installable
+`.apk` file — it is not the source project and not a ZIP of the repository.
+
+To build and download the APK:
+
+1. Open the repository on GitHub.
+2. Open the **Actions** tab.
+3. In the left sidebar select the **Android APK** workflow.
+4. Click **Run workflow** and confirm (the workflow also runs automatically
+   on every push to `main`).
+5. Wait for the workflow run to finish (the **Build Android APK** job).
+6. Open the completed run.
+7. Scroll to the **Artifacts** section.
+8. Download the **`note-app-debug-apk`** artifact.
+9. The artifact is the APK file `app-debug.apk` — copy it to an Android device
+   and install it (enable "Install unknown apps" for your file manager if
+   prompted).
+
+The workflow does the following:
+
+- checks out the repository
+- sets up Node.js 20 and Bun, then installs dependencies (`bun install`)
+- runs the web production build (`bun run build` -> `dist/`)
+- syncs the Capacitor Android project (`bunx cap sync android`)
+- sets up JDK 17
+- builds the debug APK with Gradle (`./gradlew assembleDebug`)
+- uploads the generated `.apk` as the `note-app-debug-apk` artifact
 
 ### Build the APK locally
 
-Requires Android Studio (or the Android SDK + JDK 21):
+Requires Android Studio (or the Android SDK) and JDK 17 (matching the Gradle
+8.2.1 / Android Gradle Plugin 8.2.1 used by this project):
 
 ```bash
 bun run android:build       # vite build + cap sync + gradle assembleDebug
@@ -199,42 +238,44 @@ The debug APK lands at:
 android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-### Get the APK from GitHub Actions
-
-Every push to `main`/`note-development` triggers the **Android APK** workflow:
-
-1. Open the repo → **Actions** tab → latest **Android APK** run
-2. Scroll to **Artifacts** → download **`personal-notes-android-apk`**
-3. Unzip it — inside is `app-debug.apk`
-4. Copy to your phone and install (enable "Install unknown apps" for the file manager)
-
-### Publish a GitHub Release
-
-Tag-based releases build the APK automatically:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-The **Android Release** workflow builds the APK and attaches `PersonalNotes-1.0.0-debug.apk` to a GitHub Release. Then: **Releases → v1.0.0 → download APK → install on Android.**
-
 ### Updating the app after web changes
 
 ```bash
 bun run cap:sync            # rebuild web + sync into android/
 ```
 
-then rebuild the APK (locally or via Actions). Web-only development (`bun run dev`) is unaffected — Capacitor only wraps the production build in `dist/`.
+then rebuild the APK (locally or via GitHub Actions). Web-only development
+(`bun run dev`) is unaffected — Capacitor only wraps the production build in
+`dist/`.
 
-## GitHub Pages Deployment
+## Troubleshooting
 
-The Vite `base` is set to the repository name in `vite.config.js` (currently
-`/projects/`). If you rename the repo, update the `repo` constant.
+- **Workflow failure** — Open the failed run under **Actions** and expand the
+  failed step to read the log. Re-run with **Re-run jobs** after fixing the
+  cause. Make sure you are on a branch where the workflow is allowed to run
+  (it is available via **Run workflow** on any branch).
+- **No `note-app-debug-apk` artifact** — The APK artifact is only produced
+  when the **Build Android APK** job finishes successfully. If the job failed
+  before the upload step, no artifact is created. Confirm the Gradle step
+  succeeded, then download the artifact from the **Artifacts** section of a
+  completed run.
+- **Gradle build failure** — Confirm JDK 17 is being used (the project pins
+  Gradle 8.2.1 and Android Gradle Plugin 8.2.1, both of which require JDK 17).
+  Locally, ensure the Android SDK is installed and `ANDROID_HOME`/`local.properties`
+  point at it. Read the failing step output — common causes are a missing SDK
+  component or a stale Capacitor sync.
+- **Capacitor synchronization problems** — Run `bunx cap sync android` after
+  the web build (`bun run build`) so `dist/` exists. If sync reports that the
+  Android platform is missing or out of date, run `bunx cap add android` or
+  reinstall dependencies with `bun install` before syncing.
 
-A GitHub Actions workflow (`.github/workflows/deploy.yml`) builds and deploys
-`dist/` to GitHub Pages on every push to `main`. Enable Pages via
-**Settings → Pages → Source: GitHub Actions**.
+## GitHub Pages
+
+The Vite `base` is configurable for GitHub Pages: set the `GITHUB_PAGES`
+environment variable in your own Pages workflow and the `repo` constant in
+`vite.config.js` to match your repository name. No Pages deployment workflow
+is currently committed to this repository; only the APK workflow above is
+provided.
 
 ## Project Structure
 
@@ -242,8 +283,8 @@ A GitHub Actions workflow (`.github/workflows/deploy.yml`) builds and deploys
 src/
 ├── main.jsx          # entry, service worker registration
 ├── App.jsx           # routing (hash + history), global state wiring
-├── components/       # HomeScreen, Editor, Viewer, NoteCard, Settings, …
-├── parser/           # tokenizer → parser → AST → React renderer
+├── components/       # HomeScreen, Editor, Viewer, NoteCard, Settings, ...
+├── parser/           # tokenizer -> parser -> AST -> React renderer
 ├── storage/          # notesStore (localStorage), settings, import/export
 ├── hooks/            # useNotes, useTheme, useDebounce, useStorage
 ├── utils/            # format, search, tags, links, validation
