@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#7c3aed"/>
-  <rect x="18" y="14" width="28" height="36" rx="4" fill="#ffffff"/>
-  <rect x="24" y="22" width="16" height="2.5" rx="1.2" fill="#a78bfa"/>
-  <rect x="24" y="28" width="16" height="2" rx="1" fill="#d4d4d8"/>
-  <rect x="24" y="33" width="12" height="2" rx="1" fill="#d4d4d8"/>
-  <rect x="24" y="40" width="16" height="2" rx="1" fill="#d4d4d8"/>
+  <rect width="64" height="64" rx="14.22" fill="#7c3aed"/>
+  <path d="M 23.12 15.41 L 36.15 15.41 L 44.44 23.7 L 44.44 45.03 A 3.56 3.56 0 0 1 40.88 48.59 L 23.12 48.59 A 3.56 3.56 0 0 1 19.56 45.03 L 19.56 18.97 A 3.56 3.56 0 0 1 23.12 15.41 Z" fill="#ffffff"/>
+  <polygon points="36.15,15.41 40.3,19.56 44.44,23.7" fill="#ddd6fe"/>
+  <rect x="24.3" y="28.74" width="13.63" height="1.78" rx="0.89" fill="#7c3aed"/>
+  <rect x="24.3" y="34.67" width="14.81" height="1.77" rx="0.88" fill="#d4d4d8"/>
+  <rect x="24.3" y="40.59" width="11.26" height="1.78" rx="0.89" fill="#d4d4d8"/>
 </svg>
