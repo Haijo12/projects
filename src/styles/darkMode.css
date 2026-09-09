@@ -1,0 +1,3 @@
+/* Dark mode via system preference: the theme hook resolves "system" to an
+   explicit data-theme (light|dark) at runtime, so this file only needs a
+   no-JS fallback. It intentionally contains no rules beyond that. */
