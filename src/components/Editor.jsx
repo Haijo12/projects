@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDelayedUnmount } from "../hooks/useDelayedUnmount.js";
 import Toolbar, { insertTextAt } from "./Toolbar.jsx";
 import BottomBar from "./BottomBar.jsx";
 import Viewer from "./Viewer.jsx";
@@ -39,6 +40,7 @@ export default function Editor({
   const [saveState, setSaveState] = useState("");
   const [slashMenu, setSlashMenu] = useState(null); // { query, start, end }
   const [overflowOpen, setOverflowOpen] = useState(false);
+  const overflow = useDelayedUnmount(overflowOpen, 180);
 
   const textareaRef = useRef(null);
   const saveTimer = useRef(null);
@@ -282,7 +284,7 @@ export default function Editor({
   const editedAgo = useMemo(() => formatRelativeTime(note.updatedAt), [note.updatedAt]);
 
   return (
-    <div className="screen">
+    <div className="screen screen--editor">
       <header className="editor-header safe-top">
         <button
           type="button"
@@ -368,14 +370,14 @@ export default function Editor({
         onSelect={handleSlashSelect}
       />
 
-      {overflowOpen && (
+      {overflow.mounted && (
         <>
           <div
-            className="backdrop"
+            className={`backdrop${overflow.closing ? " backdrop--out" : ""}`}
             onClick={() => setOverflowOpen(false)}
           />
           <div
-            className="sheet"
+            className={`sheet${overflow.closing ? " sheet--out" : ""}`}
             style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 41, maxWidth: "none" }}
             role="menu"
           >

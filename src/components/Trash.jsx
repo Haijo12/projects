@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useEntryAnimation } from "../hooks/useEntryAnimation.js";
 import EmptyState from "./EmptyState.jsx";
 import ConfirmDialog from "./Dialog.jsx";
 import { BackIcon, RestoreIcon, TrashIcon } from "./icons.jsx";
@@ -6,6 +7,7 @@ import { formatRelativeTime } from "../utils/format.js";
 
 export default function Trash({ notes, onRestore, onDeletePermanent, onEmptyTrash, onBack }) {
   const [confirmTarget, setConfirmTarget] = useState(null); // note id or "empty"
+  const entryAnim = useEntryAnimation();
 
   if (notes.length === 0) {
     return (
@@ -43,9 +45,13 @@ export default function Trash({ notes, onRestore, onDeletePermanent, onEmptyTras
         </div>
       </header>
       <div className="screen-scroll">
-        <div className="note-list">
-          {notes.map((note) => (
-            <div key={note.id} className="note-item trash-note">
+        <div className={`note-list${entryAnim ? " list-enter" : ""}`}>
+          {notes.map((note, idx) => (
+            <div
+              key={note.id}
+              className="note-item trash-note"
+              style={entryAnim ? { "--i": idx } : undefined}
+            >
               <div className="note-item-title">
                 <span className="note-item-title-text">{note.title || "Untitled Note"}</span>
               </div>

@@ -1,4 +1,5 @@
 import React, { memo, useRef, useState } from "react";
+import { useDelayedUnmount } from "../hooks/useDelayedUnmount.js";
 import { formatRelativeTime, derivePreview } from "../utils/format.js";
 import {
   PinIcon,
@@ -14,6 +15,7 @@ import {
 function NoteCard({
   note,
   compact = false,
+  style,
   onOpen,
   onTogglePin,
   onToggleFavorite,
@@ -28,6 +30,7 @@ function NoteCard({
 }) {
   const [swiped, setSwiped] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menu = useDelayedUnmount(menuOpen, 180);
   const touchStart = useRef(null);
   const longPressTimer = useRef(null);
 
@@ -75,6 +78,7 @@ function NoteCard({
     <>
       <div
         className={`note-item${note.pinned ? " is-pinned" : ""}${swiped ? " swiped" : ""}${compact ? " compact" : ""}`}
+        style={style}
         role="button"
         tabIndex={0}
         aria-label={`Open note ${note.title || "Untitled"}`}
@@ -234,11 +238,14 @@ function NoteCard({
         </div>
       </div>
 
-      {menuOpen && (
+      {menu.mounted && (
         <>
-          <div className="backdrop" onClick={closeMenu} />
           <div
-            className="sheet"
+            className={`backdrop${menu.closing ? " backdrop--out" : ""}`}
+            onClick={closeMenu}
+          />
+          <div
+            className={`sheet${menu.closing ? " sheet--out" : ""}`}
             style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 41, maxWidth: "none" }}
             role="menu"
           >

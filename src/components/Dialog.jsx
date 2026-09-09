@@ -1,6 +1,9 @@
 import { useEffect } from "react";
+import { useDelayedUnmount } from "../hooks/useDelayedUnmount.js";
 
 export default function ConfirmDialog({ open, title, message, confirmLabel = "Confirm", danger = false, onConfirm, onCancel }) {
+  const overlay = useDelayedUnmount(open, 160);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => {
@@ -10,12 +13,16 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = "Co
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onCancel]);
 
-  if (!open) return null;
+  if (!overlay.mounted) return null;
 
   return (
-    <div className="dialog-backdrop" onClick={onCancel} role="presentation">
+    <div
+      className={`dialog-backdrop${overlay.closing ? " backdrop--out" : ""}`}
+      onClick={onCancel}
+      role="presentation"
+    >
       <div
-        className="dialog"
+        className={`dialog${overlay.closing ? " dialog--out" : ""}`}
         role="alertdialog"
         aria-modal="true"
         aria-label={title}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useDelayedUnmount } from "../hooks/useDelayedUnmount.js";
 import { PlusIcon, StarIcon, PinIcon, ArchiveIcon, TrashIcon, SettingsIcon, NoteIcon } from "./icons.jsx";
 
 // Palette icons rendered at a controlled 20px
@@ -79,7 +80,7 @@ export default function CommandMenu({
     el?.scrollIntoView({ block: "nearest" });
   }, [selected]);
 
-  if (!open) return null;
+  if (!overlay.mounted) return null;
 
   function handleSelect(item) {
     if (mode === "palette") {
@@ -107,9 +108,13 @@ export default function CommandMenu({
   }
 
   return (
-    <div className="sheet-backdrop" onClick={onClose} role="presentation">
+    <div
+      className={`sheet-backdrop${overlay.closing ? " backdrop--out" : ""}`}
+      onClick={onClose}
+      role="presentation"
+    >
       <div
-        className="sheet"
+        className={`sheet${overlay.closing ? " sheet--out" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-label={mode === "slash" ? "Slash commands" : "Command menu"}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useEntryAnimation } from "../hooks/useEntryAnimation.js";
 import NoteCard from "./NoteCard.jsx";
 import TagFilter from "./TagFilter.jsx";
 import RecentRow from "./RecentRow.jsx";
@@ -34,6 +35,7 @@ export default function HomeScreen({
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const entryAnim = useEntryAnimation();
 
   const isTrash = filter === "trash";
   const isArchive = filter === "archive";
@@ -265,20 +267,30 @@ export default function HomeScreen({
             )}
           </EmptyState>
         ) : (
-          <div className="note-list">
+          <div className={`note-list${entryAnim ? " list-enter" : ""}`}>
             {pinnedSection.length > 0 && (
               <>
                 <div className="section-label">Pinned</div>
-                {pinnedSection.map((note) => (
-                  <NoteCard key={note.id} note={note} {...cardProps} />
+                {pinnedSection.map((note, idx) => (
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    style={entryAnim ? { "--i": idx } : undefined}
+                    {...cardProps}
+                  />
                 ))}
               </>
             )}
             {recentSection.length > 0 && (
               <>
                 {pinnedSection.length > 0 && <div className="section-label">Notes</div>}
-                {recentSection.map((note) => (
-                  <NoteCard key={note.id} note={note} {...cardProps} />
+                {recentSection.map((note, idx) => (
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    style={entryAnim ? { "--i": pinnedSection.length + idx } : undefined}
+                    {...cardProps}
+                  />
                 ))}
               </>
             )}

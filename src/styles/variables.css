@@ -57,8 +57,19 @@
   --shadow-2: 0 8px 24px rgba(24, 24, 27, 0.12), 0 2px 6px rgba(24, 24, 27, 0.05);
   --shadow-accent: 0 6px 20px color-mix(in srgb, var(--accent) 32%, transparent);
 
-  --motion-fast: 140ms cubic-bezier(0.2, 0.7, 0.3, 1);
-  --motion: 220ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  /* ===== Motion system (centralized) =====
+     Timing scale:   fast 120–180ms · normal 180–250ms · panels 250–350ms
+     Easing:         standard (ease-out feel) · emphasized (gentle overshoot-free settle)
+     Animations should only touch transform/opacity (GPU-friendly). */
+  --duration-fast: 140ms;
+  --duration-normal: 220ms;
+  --duration-slow: 300ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --motion-fast: var(--duration-fast) var(--ease-standard);
+  --motion: var(--duration-normal) var(--ease-standard);
+  --motion-slow: var(--duration-slow) var(--ease-emphasized);
 
   --font-sans: "Inter", -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
   --font-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, monospace;

@@ -86,7 +86,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.35);
   z-index: 40;
-  animation: sheet-fade var(--motion-fast);
+  animation: sheet-fade var(--motion-fast) both;
 }
 
 /* Scrollable content area under a sticky header */
@@ -173,12 +173,14 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-1);
-  transition: background var(--motion-fast), border-color var(--motion-fast);
+  transition: transform var(--motion-fast), background var(--motion-fast),
+    border-color var(--motion-fast), opacity var(--motion-fast);
   overflow: hidden;
 }
 
 .note-item:active {
   background: var(--surface-2);
+  transform: scale(0.995);
 }
 
 .note-item.compact {
@@ -755,7 +757,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  animation: sheet-fade var(--motion);
+  animation: sheet-fade var(--motion-fast) both;
 }
 
 .sheet {
@@ -770,7 +772,7 @@
   box-shadow: var(--shadow-2);
   display: flex;
   flex-direction: column;
-  animation: sheet-slide var(--motion);
+  animation: sheet-slide var(--motion-slow) both;
 }
 
 .sheet-handle {
@@ -858,8 +860,51 @@
 }
 
 @keyframes sheet-slide {
-  from { transform: translateY(40px); opacity: 0.6; }
+  from { transform: translateY(48px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+/* Reverse motion for dismissals */
+@keyframes sheet-out {
+  to { transform: translateY(48px); opacity: 0; }
+}
+
+@keyframes fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes dialog-out {
+  to { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+@keyframes toast-out {
+  to { opacity: 0; transform: translateX(-50%) translateY(6px); }
+}
+
+/* Exit-state modifiers — applied by useDelayedUnmount while closing.
+   Compound selectors so they always beat the entry animations below,
+   regardless of source order. */
+.backdrop.backdrop--out,
+.sheet-backdrop.backdrop--out,
+.dialog-backdrop.backdrop--out {
+  animation: fade-out var(--duration-fast) var(--ease-standard) forwards;
+}
+
+.sheet.sheet--out {
+  animation: sheet-out var(--duration-fast) var(--ease-standard) forwards;
+}
+
+.dialog.dialog--out {
+  animation: dialog-out var(--duration-fast) var(--ease-standard) forwards;
+}
+
+.toast.toast--out {
+  animation: toast-out var(--duration-fast) var(--ease-standard) forwards;
 }
 
 /* ===== Settings ===== */
@@ -957,7 +1002,7 @@
   height: 28px;
   border-radius: var(--radius-full);
   background: var(--surface-3); /* OFF track */
-  transition: background var(--motion-fast);
+  transition: background var(--motion);
   flex-shrink: 0;
 }
 
@@ -974,7 +1019,7 @@
   height: 22px;
   border-radius: 50%;
   background: #fff;
-  transition: transform var(--motion-fast);
+  transition: transform var(--motion) cubic-bezier(0.2, 0.8, 0.25, 1);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
@@ -1135,7 +1180,7 @@
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-2);
   z-index: 70;
-  animation: toast-in var(--motion);
+  animation: toast-in var(--motion) both;
   max-width: calc(100vw - 48px);
   text-align: center;
 }
@@ -1196,4 +1241,167 @@
 /* ===== Trash ===== */
 .trash-note {
   opacity: 0.75;
+}
+
+/* =====================================================================
+   Motion system — screen transitions, press feedback, entrances.
+   All animations only touch transform/opacity (GPU-friendly).
+   ===================================================================== */
+
+/* --- 1. Screen transitions: subtle fade + slight translate --- */
+@keyframes screen-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes screen-enter-side {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.app-frame > .screen {
+  animation: screen-enter var(--motion-slow) both;
+}
+
+/* Opening a note gently pushes in from the side (native app feel) */
+.app-frame > .screen--editor {
+  animation-name: screen-enter-side;
+}
+
+/* --- 2. List items: one-shot staggered entrance (entry window only) --- */
+@keyframes list-item-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.note-list.list-enter .note-item {
+  animation: list-item-in var(--motion) both;
+  animation-delay: calc(min(var(--i, 0), 8) * 22ms);
+}
+
+/* --- 3. Press feedback: ~0.97 scale, instant touch response --- */
+.icon-btn,
+.btn,
+.chip,
+.toolbar-btn,
+.action-btn,
+.more-trigger,
+.tag-pill,
+.capsule-toggle button,
+.segmented button,
+.backlink-item,
+.setting-row {
+  transition-property: transform, background, color, border-color, opacity;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--ease-standard);
+}
+
+.icon-btn:active,
+.btn:active,
+.chip:active,
+.toolbar-btn:active,
+.action-btn:active,
+.more-trigger:active,
+.tag-pill:active,
+.capsule-toggle button:active,
+.segmented button:active,
+.backlink-item:active {
+  transform: scale(0.97);
+}
+
+.setting-row:active {
+  background: var(--surface-2);
+}
+
+/* --- 4. Hover states (precision pointers only — never sticky on touch) --- */
+@media (hover: hover) and (pointer: fine) {
+  .icon-btn:hover {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+
+  .toolbar-btn:hover,
+  .more-trigger:hover,
+  .sheet-item:hover,
+  .backlink-item:hover {
+    background: var(--surface-2);
+  }
+
+  .setting-row:is(button):hover {
+    background: var(--surface-2);
+  }
+
+  .chip:not([aria-pressed="true"]):hover {
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+
+  .note-item:hover {
+    background: color-mix(in srgb, var(--surface-2) 60%, var(--surface));
+  }
+
+  .note-item:active:hover {
+    background: var(--surface-2);
+  }
+
+  .recent-card:hover {
+    background: color-mix(in srgb, var(--surface-2) 60%, var(--surface));
+  }
+
+  .tag-pill:hover {
+    background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  }
+
+  .btn-ghost:hover {
+    background: var(--surface-2);
+  }
+
+  .btn-primary:hover,
+  .btn-danger:hover {
+    filter: brightness(0.93);
+  }
+}
+
+/* --- 5. Dialog entrance (exit handled by --out modifier) --- */
+.dialog-backdrop {
+  animation: sheet-fade var(--motion-fast) both;
+}
+
+.dialog {
+  animation: dialog-in var(--motion) both;
+}
+
+/* --- 6. Swipe-action overlay reveal --- */
+@keyframes actions-reveal {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+.note-item-actions {
+  animation: actions-reveal var(--motion-fast) both;
+}
+
+/* --- 7. State icons: gentle pop when pin/fav appears --- */
+@keyframes icon-pop {
+  from { opacity: 0.4; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.meta-icon.pin-icon svg,
+.meta-icon.fav-icon svg {
+  animation: icon-pop var(--motion-fast) both;
+}
+
+/* --- 8. Empty states & result counts: calm single entrance --- */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.empty-state {
+  animation: fade-up var(--motion-slow) both;
+}
+
+.result-count {
+  animation: fade-up var(--motion-fast) both;
 }

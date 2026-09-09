@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNotes } from "./hooks/useNotes.js";
 import { useTheme } from "./hooks/useTheme.js";
 import HomeScreen from "./components/HomeScreen.jsx";
@@ -30,6 +30,9 @@ export default function App() {
   const [paletteFilter, setPaletteFilter] = useState(null);
   const [renameTarget, setRenameTarget] = useState(null); // note object
   const [renameValue, setRenameValue] = useState("");
+  const renameOverlay = useDelayedUnmount(Boolean(renameTarget), 160);
+  const lastRenameRef = useRef(null);
+  if (renameTarget) lastRenameRef.current = renameTarget;
 
   // --- Routing via history so Android back works naturally ---
   function navigate(name, param = null, replace = false) {
@@ -258,10 +261,14 @@ export default function App() {
       />
 
       {/* Rename dialog */}
-      {renameTarget && (
-        <div className="dialog-backdrop" onClick={() => setRenameTarget(null)} role="presentation">
+      {renameOverlay.mounted && lastRenameRef.current && (
+        <div
+          className={`dialog-backdrop${renameOverlay.closing ? " backdrop--out" : ""}`}
+          onClick={() => setRenameTarget(null)}
+          role="presentation"
+        >
           <div
-            className="dialog"
+            className={`dialog${renameOverlay.closing ? " dialog--out" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-label="Rename note"
