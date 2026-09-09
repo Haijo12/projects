@@ -1,26 +1,31 @@
-export default function SearchBar({ value, onChange, placeholder = "Search notes..." }) {
+import { SearchIcon, CloseIcon } from "./icons.jsx";
+
+export default function SearchBar({ value, onChange, placeholder = "Search notes…", onEscape }) {
   return (
     <div className="search-wrap">
       <div className="search-bar">
-        <span aria-hidden="true" style={{ color: "var(--text-3)" }}>🔍</span>
+        <SearchIcon className="search-icon" />
         <input
-          type="search"
+          type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") onEscape?.();
+          }}
           placeholder={placeholder}
           aria-label="Search notes"
           autoComplete="off"
           enterKeyHint="search"
+          inputMode="search"
         />
         {value && (
           <button
             type="button"
-            className="tap-target"
+            className="tap-target search-clear"
             aria-label="Clear search"
             onClick={() => onChange("")}
-            style={{ width: 32, height: 32 }}
           >
-            ✕
+            <CloseIcon />
           </button>
         )}
       </div>

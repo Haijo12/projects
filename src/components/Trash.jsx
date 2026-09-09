@@ -1,6 +1,8 @@
 import { useState } from "react";
 import EmptyState from "./EmptyState.jsx";
 import ConfirmDialog from "./Dialog.jsx";
+import { BackIcon, RestoreIcon, TrashIcon } from "./icons.jsx";
+import { formatRelativeTime } from "../utils/format.js";
 
 export default function Trash({ notes, onRestore, onDeletePermanent, onEmptyTrash, onBack }) {
   const [confirmTarget, setConfirmTarget] = useState(null); // note id or "empty"
@@ -11,10 +13,10 @@ export default function Trash({ notes, onRestore, onDeletePermanent, onEmptyTras
         <header className="sticky-header safe-top">
           <div className="app-header">
             <button type="button" className="icon-btn" aria-label="Back" onClick={onBack}>
-              ←
+              <BackIcon />
             </button>
             <h1>Trash</h1>
-            <span style={{ width: 44 }} />
+            <span className="header-spacer" />
           </div>
         </header>
         <EmptyState icon="🗑" title="Trash is empty" hint="Deleted notes appear here first." />
@@ -27,7 +29,7 @@ export default function Trash({ notes, onRestore, onDeletePermanent, onEmptyTras
       <header className="sticky-header safe-top">
         <div className="app-header">
           <button type="button" className="icon-btn" aria-label="Back" onClick={onBack}>
-            ←
+            <BackIcon />
           </button>
           <h1>Trash</h1>
           <button
@@ -40,23 +42,23 @@ export default function Trash({ notes, onRestore, onDeletePermanent, onEmptyTras
           </button>
         </div>
       </header>
-      <div style={{ flex: 1, overflowY: "auto" }}>
+      <div className="screen-scroll">
         <div className="note-list">
           {notes.map((note) => (
             <div key={note.id} className="note-card trash-note">
               <div className="note-card-title">
-                <span>{note.title || "Untitled Note"}</span>
+                <span className="note-card-title-text">{note.title || "Untitled Note"}</span>
               </div>
               <div className="note-card-meta">
-                <span>Deleted recently</span>
-                <span style={{ display: "flex", gap: 4 }}>
+                <span>Deleted {formatRelativeTime(note.deletedAt)}</span>
+                <span className="trash-row-actions">
                   <button
                     type="button"
                     className="action-btn"
                     aria-label={`Restore ${note.title || "note"}`}
                     onClick={() => onRestore(note.id)}
                   >
-                    ♻️
+                    <RestoreIcon />
                   </button>
                   <button
                     type="button"
@@ -64,7 +66,7 @@ export default function Trash({ notes, onRestore, onDeletePermanent, onEmptyTras
                     aria-label={`Permanently delete ${note.title || "note"}`}
                     onClick={() => setConfirmTarget(note.id)}
                   >
-                    ✕
+                    <TrashIcon />
                   </button>
                 </span>
               </div>

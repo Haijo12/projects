@@ -1,8 +1,17 @@
 import React, { memo, useRef, useState } from "react";
 import { formatRelativeTime, derivePreview } from "../utils/format.js";
+import {
+  PinIcon,
+  StarIcon,
+  ArchiveIcon,
+  TrashIcon,
+  RestoreIcon,
+  MoreIcon,
+} from "./icons.jsx";
 
 function NoteCard({
   note,
+  compact = false,
   onOpen,
   onTogglePin,
   onToggleFavorite,
@@ -45,8 +54,12 @@ function NoteCard({
     clearTimeout(longPressTimer.current);
     if (!touchStart.current) return;
     const dx = e.changedTouches[0].clientX - touchStart.current.x;
-    if (dx < -60) setSwiped(true);
-    else if (dx > 60) setSwiped(false);
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStart.current.y);
+    // Only treat as swipe if it's a mostly-horizontal gesture
+    if (Math.abs(dx) > 60 && Math.abs(dx) > dy) {
+      if (dx < 0) setSwiped(true);
+      else setSwiped(false);
+    }
     touchStart.current = null;
   }
 
@@ -60,17 +73,25 @@ function NoteCard({
   return (
     <>
       <div
-        className={`note-card${note.pinned ? " is-pinned" : ""}${swiped ? " swiped" : ""}`}
+        className={`note-card${note.pinned ? " is-pinned" : ""}${swiped ? " swiped" : ""}${compact ? " compact" : ""}`}
         role="button"
         tabIndex={0}
         aria-label={`Open note ${note.title || "Untitled"}`}
-        onClick={() => (trashMode ? null : onOpen(note))}
+        onClick={() => {
+          clearTimeout(longPressTimer.current);
+          if (swiped) {
+            setSwiped(false);
+            return;
+          }
+          if (!trashMode) onOpen(note);
+        }}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") onOpen(note);
+          if ((e.key === "Enter" || e.key === " ") && !trashMode) onOpen(note);
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEndSwipe}
+        onTouchCancel={handleTouchEnd}
         onContextMenu={handleContextMenu}
       >
         {swiped && !trashMode && (
@@ -85,7 +106,7 @@ function NoteCard({
                 setSwiped(false);
               }}
             >
-              📌
+              <PinIcon filled={note.pinned} />
             </button>
             <button
               type="button"
@@ -94,9 +115,10 @@ function NoteCard({
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleFavorite(note.id);
+                setSwiped(false);
               }}
             >
-              ⭐
+              <StarIcon filled={note.favorite} />
             </button>
             <button
               type="button"
@@ -108,7 +130,7 @@ function NoteCard({
                 setSwiped(false);
               }}
             >
-              📦
+              <ArchiveIcon />
             </button>
             <button
               type="button"
@@ -120,7 +142,7 @@ function NoteCard({
                 setSwiped(false);
               }}
             >
-              🗑
+              <TrashIcon />
             </button>
           </div>
         )}
@@ -136,7 +158,7 @@ function NoteCard({
                 onRestore(note.id);
               }}
             >
-              ♻️
+              <RestoreIcon />
             </button>
             <button
               type="button"
@@ -147,21 +169,29 @@ function NoteCard({
                 onDeletePermanent(note.id);
               }}
             >
-              ✕
+              <TrashIcon />
             </button>
           </div>
         )}
 
         <div className={trashMode ? "trash-note" : ""}>
           <div className="note-card-title">
-            {note.pinned && <span className="pin-icon" aria-label="Pinned">📌</span>}
-            {note.favorite && <span className="fav-icon" aria-label="Favorite">⭐</span>}
-            <span>{note.title || "Untitled Note"}</span>
+            <span className="note-card-title-text">{note.title || "Untitled Note"}</span>
+            {note.favorite && (
+              <span className="fav-icon" aria-label="Favorite">
+                <StarIcon filled />
+              </span>
+            )}
+            {note.pinned && (
+              <span className="pin-icon" aria-label="Pinned">
+                <PinIcon filled />
+              </span>
+            )}
           </div>
           {preview && <div className="note-card-preview">{preview}</div>}
-          {(note.tags?.length > 0) && (
+          {note.tags?.length > 0 && (
             <div className="note-card-tags">
-              {note.tags.slice(0, 4).map((tag) => (
+              {note.tags.slice(0, 3).map((tag) => (
                 <button
                   key={tag}
                   type="button"
@@ -181,26 +211,38 @@ function NoteCard({
               {trashMode && note.deletedAt ? "Deleted " : "Updated "}
               {formatRelativeTime(trashMode ? note.deletedAt : note.updatedAt)}
             </span>
+            <span
+              className="more-trigger"
+              role="button"
+              tabIndex={0}
+              aria-label="Note actions"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.stopPropagation();
+                  setMenuOpen(true);
+                }
+              }}
+            >
+              <MoreIcon />
+            </span>
           </div>
         </div>
       </div>
 
       {menuOpen && (
         <>
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 40,
-            }}
-            onClick={closeMenu}
-          />
+          <div className="backdrop" onClick={closeMenu} />
           <div
             className="sheet"
-            style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 41, maxWidth: "none", borderRadius: "20px 20px 0 0" }}
+            style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 41, maxWidth: "none" }}
             role="menu"
           >
             <div className="sheet-handle" />
+            <div className="sheet-section">{note.title || "Untitled Note"}</div>
             <button
               type="button"
               className="sheet-item"
@@ -210,7 +252,7 @@ function NoteCard({
                 closeMenu();
               }}
             >
-              <span className="item-icon">{note.pinned ? "📌" : "📍"}</span>
+              <span className="item-icon"><PinIcon filled={note.pinned} /></span>
               <span className="item-label">{note.pinned ? "Unpin" : "Pin"}</span>
             </button>
             <button
@@ -222,7 +264,7 @@ function NoteCard({
                 closeMenu();
               }}
             >
-              <span className="item-icon">{note.favorite ? "💔" : "⭐"}</span>
+              <span className="item-icon"><StarIcon filled={note.favorite} /></span>
               <span className="item-label">{note.favorite ? "Unfavorite" : "Favorite"}</span>
             </button>
             {!trashMode && (
@@ -236,7 +278,7 @@ function NoteCard({
                     closeMenu();
                   }}
                 >
-                  <span className="item-icon">✏️</span>
+                  <span className="item-icon">Aa</span>
                   <span className="item-label">Rename</span>
                 </button>
                 <button
@@ -260,37 +302,35 @@ function NoteCard({
                     closeMenu();
                   }}
                 >
-                  <span className="item-icon">📦</span>
+                  <span className="item-icon"><ArchiveIcon /></span>
                   <span className="item-label">Archive</span>
                 </button>
               </>
             )}
             {trashMode ? (
-              <>
-                <button
-                  type="button"
-                  className="sheet-item"
-                  role="menuitem"
-                  onClick={() => {
-                    onRestore(note.id);
-                    closeMenu();
-                  }}
-                >
-                  <span className="item-icon">♻️</span>
-                  <span className="item-label">Restore</span>
-                </button>
-              </>
-            ) : (
               <button
                 type="button"
                 className="sheet-item"
+                role="menuitem"
+                onClick={() => {
+                  onRestore(note.id);
+                  closeMenu();
+                }}
+              >
+                <span className="item-icon"><RestoreIcon /></span>
+                <span className="item-label">Restore</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="sheet-item danger"
                 role="menuitem"
                 onClick={() => {
                   onTrash(note.id);
                   closeMenu();
                 }}
               >
-                <span className="item-icon">🗑</span>
+                <span className="item-icon"><TrashIcon /></span>
                 <span className="item-label">Move to Trash</span>
               </button>
             )}

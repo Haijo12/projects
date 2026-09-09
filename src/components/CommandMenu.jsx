@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { PlusIcon, StarIcon, PinIcon, ArchiveIcon, TrashIcon, SettingsIcon, NoteIcon } from "./icons.jsx";
 
 // Slash commands offered while typing "/" in the editor
 export const SLASH_COMMANDS = [
@@ -21,14 +22,14 @@ export const SLASH_COMMANDS = [
 // Global command palette entries
 export function buildPaletteCommands({ onCreate, onOpenSettings, onShowFavorites, onShowPinned, onOpenTrash, onOpenArchive, onOpenNote, notes }) {
   return [
-    { icon: "＋", label: "Create note", hint: "", run: onCreate },
-    { icon: "⭐", label: "Show favorites", hint: "", run: onShowFavorites },
-    { icon: "📌", label: "Show pinned", hint: "", run: onShowPinned },
-    { icon: "📦", label: "Show archive", hint: "", run: onOpenArchive },
-    { icon: "🗑", label: "Open trash", hint: "", run: onOpenTrash },
-    { icon: "⚙️", label: "Settings", hint: "", run: onOpenSettings },
+    { icon: <PlusIcon />, label: "Create note", hint: "", run: onCreate },
+    { icon: <StarIcon />, label: "Show favorites", hint: "", run: onShowFavorites },
+    { icon: <PinIcon />, label: "Show pinned", hint: "", run: onShowPinned },
+    { icon: <ArchiveIcon />, label: "Show archive", hint: "", run: onOpenArchive },
+    { icon: <TrashIcon />, label: "Open trash", hint: "", run: onOpenTrash },
+    { icon: <SettingsIcon />, label: "Settings", hint: "", run: onOpenSettings },
     ...(notes || []).slice(0, 8).map((n) => ({
-      icon: "📄",
+      icon: <NoteIcon />,
       label: `Open: ${n.title || "Untitled"}`,
       hint: "",
       run: () => onOpenNote(n),

@@ -2,22 +2,24 @@
 // insertAround wraps selection; insertAtCursor places cursor sensibly.
 
 const BUTTONS = [
-  { label: "#", title: "Heading", action: "heading" },
-  { label: "**", title: "Bold", action: "bold" },
-  { label: "_", title: "Italic", action: "italic" },
-  { label: "`", title: "Inline code", action: "code" },
-  { label: "```", title: "Code block", action: "codeblock" },
-  { label: "-", title: "List", action: "list" },
-  { label: ">", title: "Quote", action: "quote" },
-  { label: "[ ]", title: "Task", action: "task" },
-  { label: "@", title: "Tag", action: "tag" },
-  { label: "[[", title: "Note link", action: "wikilink" },
+  { label: "H", title: "Heading", action: "heading" },
+  { label: "B", title: "Bold", action: "bold" },
+  { label: "I", title: "Italic", action: "italic" },
+  { label: "S", title: "Strikethrough", action: "strike" },
+  { label: "</>", title: "Inline code", action: "code", mono: true },
+  { label: "◧", title: "Code block", action: "codeblock", mono: true },
+  { label: "•—", title: "List", action: "list" },
+  { label: "☑", title: "Checklist", action: "task" },
+  { label: "❝", title: "Quote", action: "quote" },
+  { label: "@", title: "Tag", action: "tag", mono: true },
+  { label: "⧉", title: "Note link", action: "wikilink" },
 ];
 
 export const toolbarActions = {
   heading: { before: "## ", after: "" },
   bold: { before: "**", after: "**" },
   italic: { before: "_", after: "_" },
+  strike: { before: "~~", after: "~~" },
   code: { before: "`", after: "`" },
   codeblock: { before: "```\n", after: "\n```" },
   list: { before: "- ", after: "" },
@@ -34,7 +36,7 @@ export default function Toolbar({ onInsert }) {
         <button
           key={btn.action}
           type="button"
-          className="toolbar-btn"
+          className={`toolbar-btn${btn.mono ? " tb-mono" : ""}`}
           title={btn.title}
           aria-label={`Insert ${btn.title}`}
           onClick={() => onInsert(btn.action)}

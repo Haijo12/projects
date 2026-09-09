@@ -3,6 +3,7 @@ import Toolbar, { insertTextAt } from "./Toolbar.jsx";
 import BottomBar from "./BottomBar.jsx";
 import Viewer from "./Viewer.jsx";
 import CommandMenu, { SLASH_COMMANDS } from "./CommandMenu.jsx";
+import { BackIcon, MoreIcon, PinIcon, StarIcon, ArchiveIcon, TrashIcon, ExportIcon } from "./icons.jsx";
 import { countWords, countCharacters, deriveTitleFromContent, formatRelativeTime } from "../utils/format.js";
 import { saveDraft, loadDraft, clearDraft } from "../storage/notesStore.js";
 import { updateSettings } from "../storage/settingsStore.js";
@@ -29,10 +30,12 @@ export default function Editor({
 }) {
   const [mode, setMode] = useState(settings.defaultMode === "preview" ? "preview" : "edit");
   const [content, setContent] = useState(note.content);
+  // null = derive the title from content; a string = user-set title
   const [manualTitle, setManualTitle] = useState(
     note.title && note.title !== deriveTitleFromContent(note.content) ? note.title : null
   );
-  const [saveStatus, setSaveStatus] = useState("");
+  // "", "saving", "saved", "recovered", "unsaved" (autosave off)
+  const [saveState, setSaveState] = useState("");
   const [slashMenu, setSlashMenu] = useState(null); // { query, start, end }
   const [overflowOpen, setOverflowOpen] = useState(false);
 
@@ -40,44 +43,26 @@ export default function Editor({
   const saveTimer = useRef(null);
   const draftTimer = useRef(null);
   const dirtyRef = useRef(false);
-  const stateRef = useRef({ content: note.content, title: note.title });
+  // Refs hold the latest values so timers/cleanups never save stale content.
+  const stateRef = useRef({
+    content: note.content,
+    title: note.title && note.title !== deriveTitleFromContent(note.content) ? note.title : null,
+  });
   const statusTimeout = useRef(null);
+  const initializedFor = useRef(null);
 
   const derivedTitle = useMemo(() => deriveTitleFromContent(content), [content]);
   const displayTitle = manualTitle ?? derivedTitle;
   const backlinks = useMemo(() => getBacklinks(note), [note, getBacklinks]);
 
-  // Load note content on switch; recover draft if it is newer (crash/reload)
-  useEffect(() => {
-    const draft = loadDraft();
-    if (
-      draft &&
-      draft.noteId === note.id &&
-      draft.at > note.updatedAt &&
-      typeof draft.content === "string" &&
-      draft.content !== note.content
-    ) {
-      setContent(draft.content);
-      setManualTitle(draft.title && draft.title !== deriveTitleFromContent(draft.content) ? draft.title : null);
-      dirtyRef.current = true;
-      flushSave();
-    } else {
-      setContent(note.content);
-      setManualTitle(
-        note.title && note.title !== deriveTitleFromContent(note.content) ? note.title : null
-      );
-      clearDraft();
-    }
-    dirtyRef.current = false;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [note.id]);
-
   const flashStatus = useCallback((text) => {
-    setSaveStatus(text);
+    setSaveState(text);
     if (statusTimeout.current) clearTimeout(statusTimeout.current);
-    statusTimeout.current = setTimeout(() => setSaveStatus(""), 1600);
+    statusTimeout.current = setTimeout(() => setSaveState(""), 1600);
   }, []);
 
+  // Single save exit point. Reads latest values from refs, so it is safe to
+  // call from timers, event listeners, blur, unmount — any closure age.
   const flushSave = useCallback(() => {
     if (saveTimer.current) {
       clearTimeout(saveTimer.current);
@@ -89,72 +74,117 @@ export default function Editor({
     }
     if (!dirtyRef.current) return;
     dirtyRef.current = false;
-    const title = manualTitle ?? derivedTitle;
-    onSave(note.id, {
-      content: stateRef.current.content,
-      title,
-    });
-    clearDraft();
-    flashStatus("Saved");
-  }, [manualTitle, derivedTitle, note.id, onSave, flashStatus]);
+    const content = stateRef.current.content;
+    const title = stateRef.current.title ?? deriveTitleFromContent(content);
+    onSave(note.id, { content, title });
+    clearDraft(note.id);
+    setSaveState("saved");
+    if (statusTimeout.current) clearTimeout(statusTimeout.current);
+    statusTimeout.current = setTimeout(() => setSaveState(""), 1500);
+  }, [note.id, onSave]);
 
-  // Flush on hide/unload so nothing is lost
+  // Mark-edit helper shared by typing and programmatic (toolbar/slash) edits.
+  const markEdited = useCallback(() => {
+    dirtyRef.current = true;
+    // Draft recovery net (debounced, per note) — survives a crash between saves.
+    if (draftTimer.current) clearTimeout(draftTimer.current);
+    draftTimer.current = setTimeout(() => {
+      saveDraft(note.id, stateRef.current.content, stateRef.current.title ?? deriveTitleFromContent(stateRef.current.content));
+    }, DRAFT_DELAY);
+    if (settings.autosave) {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => flushSave(), AUTOSAVE_DELAY);
+      setSaveState((s) => (s === "saving" ? s : "saving"));
+    } else {
+      setSaveState((s) => (s === "unsaved" ? s : "unsaved"));
+    }
+  }, [note.id, settings.autosave, flushSave]);
+
+  // Load note content on switch/mount; recover a newer draft if one exists
+  // (crash/reload) and persist it immediately so it is never at risk twice.
   useEffect(() => {
-    const onHide = () => {
-      if (dirtyRef.current) {
-        saveDraft(note.id, stateRef.current.content, manualTitle ?? derivedTitle);
-        flushSave();
-      }
+    if (initializedFor.current === note.id) return;
+    initializedFor.current = note.id;
+
+    const draft = loadDraft(note.id);
+    if (
+      draft &&
+      draft.at > note.updatedAt &&
+      draft.content !== note.content
+    ) {
+      const recTitle =
+        typeof draft.title === "string" && draft.title && draft.title !== deriveTitleFromContent(draft.content)
+          ? draft.title
+          : null;
+      setContent(draft.content);
+      stateRef.current.content = draft.content;
+      setManualTitle(recTitle);
+      stateRef.current.title = recTitle;
+      onSave(note.id, {
+        content: draft.content,
+        title: recTitle ?? deriveTitleFromContent(draft.content),
+      });
+      clearDraft(note.id);
+      flashStatus("recovered");
+    } else {
+      setContent(note.content);
+      stateRef.current.content = note.content;
+      const t =
+        note.title && note.title !== deriveTitleFromContent(note.content) ? note.title : null;
+      setManualTitle(t);
+      stateRef.current.title = t;
+      clearDraft(note.id);
+    }
+    dirtyRef.current = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [note.id]);
+
+  // Flush on hide/unload so nothing is lost when Android backgrounds/kills us.
+  useEffect(() => {
+    const persistNow = () => {
+      if (!dirtyRef.current) return;
+      saveDraft(
+        note.id,
+        stateRef.current.content,
+        stateRef.current.title ?? deriveTitleFromContent(stateRef.current.content)
+      );
+      flushSave();
     };
     const onVisibility = () => {
-      if (document.visibilityState === "hidden") onHide();
+      if (document.visibilityState === "hidden") persistNow();
     };
-    window.addEventListener("pagehide", onHide);
+    window.addEventListener("pagehide", persistNow);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
-      window.removeEventListener("pagehide", onHide);
+      window.removeEventListener("pagehide", persistNow);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [note.id, manualTitle, derivedTitle, flushSave]);
+  }, [note.id, flushSave]);
 
-  // Flush when leaving the editor
+  // Flush when leaving the editor (unmount)
   useEffect(() => {
     return () => {
-      // Unmount: final synchronous save via ref state (refs hold fresh values)
       if (dirtyRef.current) {
         dirtyRef.current = false;
+        const content = stateRef.current.content;
         onSave(note.id, {
-          content: stateRef.current.content,
-          title: stateRef.current.title ?? deriveTitleFromContent(stateRef.current.content),
+          content,
+          title: stateRef.current.title ?? deriveTitleFromContent(content),
         });
-        clearDraft();
+        clearDraft(note.id);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [note.id]);
+  }, [note.id, onSave]);
 
   function handleContentChange(e) {
     const val = e.target.value;
     const pos = e.target.selectionStart;
     setContent(val);
     stateRef.current.content = val;
-    dirtyRef.current = true;
+    markEdited();
 
-    // Draft net (debounced)
-    if (draftTimer.current) clearTimeout(draftTimer.current);
-    draftTimer.current = setTimeout(() => {
-      saveDraft(note.id, val, manualTitle ?? derivedTitle);
-    }, DRAFT_DELAY);
-
-    // Autosave
-    if (settings.autosave) {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => {
-        flushSave();
-      }, AUTOSAVE_DELAY);
-    }
-
-    // Slash command detection: "/word" right before cursor, preceded by whitespace/line start
+    // Slash command detection: "/word" right before cursor, after whitespace/line start
     const before = val.slice(0, pos);
     const m = before.match(/(?:^|\s)\/([a-zA-Z]*)$/);
     if (m && m[1].length <= 15) {
@@ -167,11 +197,10 @@ export default function Editor({
 
   function handleTitleChange(e) {
     const val = e.target.value;
-    setManualTitle(val === "" ? null : val);
-    stateRef.current.title = val === "" ? null : val;
-    dirtyRef.current = true;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => flushSave(), AUTOSAVE_DELAY);
+    const title = val === "" ? null : val;
+    setManualTitle(title);
+    stateRef.current.title = title;
+    markEdited();
   }
 
   function handleToolbarInsert(action) {
@@ -185,9 +214,7 @@ export default function Editor({
     const val = ta.value;
     setContent(val);
     stateRef.current.content = val;
-    dirtyRef.current = true;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => flushSave(), AUTOSAVE_DELAY);
+    markEdited();
   }
 
   function handleSlashSelect(item) {
@@ -196,8 +223,7 @@ export default function Editor({
     const ta = textareaRef.current;
     if (!ta || !menu) return;
     // Remove "/query" and insert snippet
-    const snippet = item.snippet;
-    insertTextAt(ta, menu.start, menu.end, snippet);
+    insertTextAt(ta, menu.start, menu.end, item.snippet);
     handleProgrammaticEdit(ta);
   }
 
@@ -208,7 +234,12 @@ export default function Editor({
   }
 
   function handleExportMarkdown() {
-    const md = exportNoteMarkdown({ ...note, content: stateRef.current.content, title: displayTitle });
+    flushSave();
+    const md = exportNoteMarkdown({
+      ...note,
+      content: stateRef.current.content,
+      title: displayTitle,
+    });
     const filename = (displayTitle || "note").replace(/[^\w\- ]+/g, "").trim() || "note";
     downloadTextFile(md, `${filename}.md`, "text/markdown");
     setOverflowOpen(false);
@@ -217,21 +248,45 @@ export default function Editor({
   const wordCount = countWords(content);
   const charCount = countCharacters(content);
   const showCounts = settings.wordCount || settings.charCount;
-  const statusText = !online ? "Offline" : saveStatus;
+
+  const statusText = useMemo(() => {
+    if (!online) return "Offline";
+    switch (saveState) {
+      case "saving":
+        return "Saving…";
+      case "saved":
+        return "Saved";
+      case "recovered":
+        return "Draft recovered";
+      case "unsaved":
+        return "Unsaved changes";
+      default:
+        return "";
+    }
+  }, [online, saveState]);
 
   const editedAgo = useMemo(() => formatRelativeTime(note.updatedAt), [note.updatedAt]);
 
   return (
     <div className="screen">
       <header className="editor-header safe-top">
-        <button type="button" className="icon-btn" aria-label="Back to notes" onClick={() => { flushSave(); onBack(); }}>
-          ←
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label="Back to notes"
+          onClick={() => {
+            flushSave();
+            onBack();
+          }}
+        >
+          <BackIcon />
         </button>
         <input
           type="text"
           className="editor-title-input"
           value={displayTitle}
           onChange={handleTitleChange}
+          onBlur={flushSave}
           placeholder="Untitled Note"
           aria-label="Note title"
           enterKeyHint="done"
@@ -240,9 +295,12 @@ export default function Editor({
           type="button"
           className="icon-btn"
           aria-label="Note actions"
-          onClick={() => setOverflowOpen(true)}
+          onClick={() => {
+            flushSave();
+            setOverflowOpen(true);
+          }}
         >
-          ⋮
+          <MoreIcon />
         </button>
       </header>
 
@@ -253,12 +311,12 @@ export default function Editor({
             className="editor-textarea"
             value={content}
             onChange={handleContentChange}
-            placeholder={"Start writing...\n\n# Heading\n**bold** _italic_ `code`\n- list item\n[ ] task\n@tag\n[[Note link]]"}
+            onBlur={flushSave}
+            placeholder={"Start writing…\n\n# Heading\n**bold** _italic_ `code`\n- list item\n[ ] task\n@tag\n[[Note link]]"}
             aria-label="Note content"
             autoCapitalize="sentences"
             autoCorrect="on"
             spellCheck={true}
-            style={{ height: "100%", border: "none" }}
           />
         </div>
       ) : (
@@ -275,18 +333,7 @@ export default function Editor({
         />
       )}
 
-      {statusText && (
-        <div
-          className="save-status"
-          style={{ position: "static", alignSelf: "flex-end", margin: "2px 12px" }}
-        >
-          {statusText}
-        </div>
-      )}
-
-      {mode === "edit" && settings.showToolbar && (
-        <Toolbar onInsert={handleToolbarInsert} />
-      )}
+      {mode === "edit" && settings.showToolbar && <Toolbar onInsert={handleToolbarInsert} />}
 
       <BottomBar
         mode={mode}
@@ -294,7 +341,7 @@ export default function Editor({
         wordCount={settings.wordCount ? wordCount : 0}
         charCount={settings.charCount ? charCount : 0}
         showCounts={showCounts}
-        saveStatus={mode === "preview" ? null : null}
+        statusText={statusText}
       />
 
       <CommandMenu
@@ -309,7 +356,7 @@ export default function Editor({
       {overflowOpen && (
         <>
           <div
-            style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(0,0,0,0.3)" }}
+            className="backdrop"
             onClick={() => setOverflowOpen(false)}
           />
           <div
@@ -327,7 +374,7 @@ export default function Editor({
                 setOverflowOpen(false);
               }}
             >
-              <span className="item-icon">{note.pinned ? "📍" : "📌"}</span>
+              <span className="item-icon"><PinIcon filled={note.pinned} /></span>
               <span className="item-label">{note.pinned ? "Unpin" : "Pin"}</span>
             </button>
             <button
@@ -338,11 +385,11 @@ export default function Editor({
                 setOverflowOpen(false);
               }}
             >
-              <span className="item-icon">{note.favorite ? "💔" : "⭐"}</span>
+              <span className="item-icon"><StarIcon filled={note.favorite} /></span>
               <span className="item-label">{note.favorite ? "Unfavorite" : "Favorite"}</span>
             </button>
             <button type="button" className="sheet-item" onClick={handleExportMarkdown}>
-              <span className="item-icon">📤</span>
+              <span className="item-icon"><ExportIcon /></span>
               <span className="item-label">Export as Markdown</span>
             </button>
             <button
@@ -355,12 +402,12 @@ export default function Editor({
                 onBack();
               }}
             >
-              <span className="item-icon">📦</span>
+              <span className="item-icon"><ArchiveIcon /></span>
               <span className="item-label">Archive</span>
             </button>
             <button
               type="button"
-              className="sheet-item"
+              className="sheet-item danger"
               onClick={() => {
                 flushSave();
                 setOverflowOpen(false);
@@ -368,7 +415,7 @@ export default function Editor({
                 onBack();
               }}
             >
-              <span className="item-icon">🗑</span>
+              <span className="item-icon"><TrashIcon /></span>
               <span className="item-label">Move to Trash</span>
             </button>
           </div>

@@ -27,6 +27,8 @@ export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
   const [paletteFilter, setPaletteFilter] = useState(null);
+  const [renameTarget, setRenameTarget] = useState(null); // note object
+  const [renameValue, setRenameValue] = useState("");
 
   // --- Routing via history so Android back works naturally ---
   function navigate(name, param = null, replace = false) {
@@ -41,7 +43,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    const onPop = (e) => {
+    const onPop = () => {
       setRoute(routeFromLocation());
     };
     window.addEventListener("popstate", onPop);
@@ -59,10 +61,7 @@ export default function App() {
     };
   }, []);
 
-  const openNote = useCallback(
-    (note) => navigate("note", note.id),
-    []
-  );
+  const openNote = useCallback((note) => navigate("note", note.id), []);
 
   const createNote = useCallback(() => {
     const now = Date.now();
@@ -119,15 +118,11 @@ export default function App() {
     [notes]
   );
 
-  const handleRename = useCallback(
-    (note) => {
-      const current = getNote(note.id);
-      const title = window.prompt("Rename note", current?.title || "");
-      if (title === null) return;
-      notes.updateNote(note.id, { title: title.trim() });
-    },
-    [notes]
-  );
+  const handleRename = useCallback((note) => {
+    const current = getNote(note.id);
+    setRenameTarget(current);
+    setRenameValue(current?.title || "");
+  }, []);
 
   const goHome = useCallback(() => navigate("home"), []);
 
@@ -164,11 +159,18 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paletteFilter]);
 
+  function commitRename() {
+    if (!renameTarget) return;
+    notes.updateNote(renameTarget.id, { title: renameValue.trim() });
+    setRenameTarget(null);
+  }
+
   return (
     <div className="app-frame">
       {route.name === "home" && (
         <HomeScreen
           notes={notes}
+          compact={settings.compactList}
           onOpenNote={openNote}
           onCreateNote={createNote}
           onTogglePin={(id) => notes.updateNote(id, { pinned: !getNote(id).pinned })}
@@ -248,6 +250,45 @@ export default function App() {
         items={paletteItems}
         onClose={() => setPaletteOpen(false)}
       />
+
+      {/* Rename dialog */}
+      {renameTarget && (
+        <div className="dialog-backdrop" onClick={() => setRenameTarget(null)} role="presentation">
+          <div
+            className="dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Rename note"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2>Rename note</h2>
+            <input
+              className="sheet-input"
+              style={{ marginBottom: 4 }}
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  commitRename();
+                } else if (e.key === "Escape") {
+                  setRenameTarget(null);
+                }
+              }}
+              placeholder="Note title"
+              aria-label="New note title"
+              autoFocus
+            />
+            <div className="dialog-actions">
+              <button type="button" className="btn btn-ghost" onClick={() => setRenameTarget(null)}>
+                Cancel
+              </button>
+              <button type="button" className="btn btn-primary" onClick={commitRename}>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {notes.storageError && (
         <div className="toast" role="alert" style={{ background: "var(--danger)", color: "#fff" }}>

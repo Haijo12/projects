@@ -1,7 +1,18 @@
-// useNotes — central client-side state over notesStore
+// useNotes — central client-side state over notesStore.
+//
+// The store is copy-on-write and emits "notes" events, so this hook just
+// mirrors the store reference into React state. Initialization happens
+// synchronously via useState(getAllNotes) — before any effect can write —
+// so no save can ever overwrite real notes with an empty default array.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getAllNotes, saveNote, deleteNotePermanently, emptyTrash } from "../storage/notesStore.js";
+import {
+  getAllNotes,
+  saveNote,
+  deleteNotePermanently,
+  emptyTrash,
+  subscribe,
+} from "../storage/notesStore.js";
 import { extractTags } from "../utils/tags.js";
 import { generateId, deriveTitleFromContent } from "../utils/format.js";
 import { searchNotes } from "../utils/search.js";
@@ -18,20 +29,29 @@ export function useNotes() {
   const [notes, setNotes] = useState(getAllNotes);
   const [storageError, setStorageError] = useState(null);
 
-  // Refresh from store when another tab writes (storage event) or on focus
-  useEffect(() => {
-    const onStorage = () => setNotes(getAllNotes());
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("focus", onStorage);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("focus", onStorage);
-    };
-  }, []);
-
   const refresh = useCallback(() => setNotes(getAllNotes()), []);
 
-  // Trash retention
+  // Mirror store mutations (from this tab) into state. The store hands back a
+  // fresh array reference on every write, so React always sees a change.
+  useEffect(() => {
+    const unsub = subscribe((event) => {
+      if (event.kind === "storage-error") {
+        setStorageError("Could not save note. Storage may be full.");
+      } else {
+        refresh();
+      }
+    });
+    return unsub;
+  }, [refresh]);
+
+  // Cross-tab / cross-window sync (the storage event only fires in *other* tabs)
+  useEffect(() => {
+    const onStorage = () => refresh();
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [refresh]);
+
+  // Trash retention (purges only notes already in trash past retention)
   useEffect(() => {
     const settings = getSettings();
     if (purgeExpiredTrash(settings.trashRetentionDays) > 0) {

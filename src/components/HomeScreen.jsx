@@ -4,6 +4,7 @@ import SearchBar from "./SearchBar.jsx";
 import TagFilter from "./TagFilter.jsx";
 import EmptyState from "./EmptyState.jsx";
 import { searchNotes } from "../utils/search.js";
+import { SearchIcon, SettingsIcon, PlusIcon } from "./icons.jsx";
 
 const FILTERS = [
   { key: "all", label: "All" },
@@ -15,6 +16,9 @@ const FILTERS = [
 
 export default function HomeScreen({
   notes, // { visibleNotes, pinnedNotes, favoriteNotes, archivedNotes, trashedNotes, tagList }
+  compact = false,
+  searchOpen = false,
+  onSearchClose,
   onOpenNote,
   onCreateNote,
   onTogglePin,
@@ -100,6 +104,14 @@ export default function HomeScreen({
     };
   }, []);
 
+  // Search overlay lives in App; when open, focus our search input
+  useEffect(() => {
+    if (searchOpen) {
+      const input = document.querySelector(".search-bar input");
+      input?.focus();
+    }
+  }, [searchOpen]);
+
   function handleTagClick(tag) {
     setFilter("all");
     setQuery("");
@@ -118,6 +130,7 @@ export default function HomeScreen({
     trashMode: isTrash,
     onRestore,
     onDeletePermanent,
+    compact,
   };
 
   return (
@@ -129,13 +142,13 @@ export default function HomeScreen({
             <button
               type="button"
               className="icon-btn"
-              aria-label="Open search"
+              aria-label="Search notes"
               onClick={() => {
                 const input = document.querySelector(".search-bar input");
                 input?.focus();
               }}
             >
-              🔍
+              <SearchIcon />
             </button>
             <button
               type="button"
@@ -143,7 +156,7 @@ export default function HomeScreen({
               aria-label="Command menu"
               onClick={onOpenCommandMenu}
             >
-              ⌘
+              <span className="glyph">⌘</span>
             </button>
             <button
               type="button"
@@ -151,11 +164,11 @@ export default function HomeScreen({
               aria-label="Settings"
               onClick={onOpenSettings}
             >
-              ⚙️
+              <SettingsIcon />
             </button>
           </div>
         </div>
-        <SearchBar value={query} onChange={setQuery} />
+        <SearchBar value={query} onChange={setQuery} onEscape={onSearchClose} />
         <div className="filter-row" role="tablist" aria-label="Note filters">
           {FILTERS.map((f) => (
             <button
@@ -186,7 +199,7 @@ export default function HomeScreen({
         />
       </header>
 
-      <div className="screen-scroll" style={{ flex: 1, overflowY: "auto" }}>
+      <div className="screen-scroll">
         {resultCount && <div className="result-count">{resultCount}</div>}
 
         {filtered.length === 0 ? (
@@ -225,7 +238,7 @@ export default function HomeScreen({
             )}
             {recentSection.length > 0 && (
               <>
-                {pinnedSection.length > 0 && <div className="section-label">Recent</div>}
+                {pinnedSection.length > 0 && <div className="section-label">Notes</div>}
                 {recentSection.map((note) => (
                   <NoteCard key={note.id} note={note} {...cardProps} />
                 ))}
@@ -237,7 +250,7 @@ export default function HomeScreen({
 
       {!isTrash && (
         <button type="button" className="fab" aria-label="Create new note" onClick={onCreateNote}>
-          +
+          <PlusIcon style={{ width: 26, height: 26 }} />
         </button>
       )}
     </div>

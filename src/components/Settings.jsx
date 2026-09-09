@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import ConfirmDialog from "./Dialog.jsx";
 import Toast from "./Toast.jsx";
+import { BackIcon, ChevronDownIcon, ChevronRightIcon } from "./icons.jsx";
 import { downloadJsonBackup, downloadTextFile, parseImportFile, mergeImportedNotes } from "../storage/importExport.js";
 import { buildMarkdownBundle } from "../storage/backup.js";
 import { clearAllData } from "../storage/notesStore.js";
@@ -65,10 +66,9 @@ export default function Settings({ settings, onSettingsChange, onBack, onOpenTra
   return (
     <div className="screen">
       <header className="sticky-header safe-top">
-        <div className="app-header">
-          <button type="button" className="icon-btn" aria-label="Back" onClick={onBack}>
-            ←
-          </button>
+        <div className="app-header">            <button type="button" className="icon-btn" aria-label="Back" onClick={onBack}>
+              <BackIcon />
+            </button>
           <h1>Settings</h1>
           <span style={{ width: 44 }} />
         </div>
@@ -204,7 +204,7 @@ export default function Settings({ settings, onSettingsChange, onBack, onOpenTra
               onClick={() => setShowSyntax((v) => !v)}
             >
               <span className="row-label">Syntax reference</span>
-              <span className="row-value">{showSyntax ? "▲" : "▼"}</span>
+              <span className="row-value">{showSyntax ? <ChevronDownIcon /> : <ChevronRightIcon />}</span>
             </button>
             {showSyntax && (
               <div style={{ padding: "12px 16px 16px", display: "grid", gap: 8 }}>
