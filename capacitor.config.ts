@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.haijo12.personalnotes',
-  appName: 'Personal Notes',
+  appId: 'com.haijo.notes',
+  appName: 'Notes',
   webDir: 'dist',
   android: {
     allowMixedContent: false,

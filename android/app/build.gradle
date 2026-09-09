@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.haijo12.personalnotes"
+    namespace "com.haijo.notes"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.haijo12.personalnotes"
+        applicationId "com.haijo.notes"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

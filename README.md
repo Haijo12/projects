@@ -177,7 +177,7 @@ bun run build               # web build → dist/
 bunx cap sync android       # copies dist/ into the Android project
 ```
 
-The Android project lives in `android/` (appId `com.haijo12.personalnotes`, app name "Personal Notes").
+The Android project lives in `android/` (appId `com.haijo.notes`, app name "Notes").
 
 ### Build the APK locally
 

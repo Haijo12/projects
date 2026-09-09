@@ -1,4 +1,4 @@
-package com.haijo12.personalnotes;
+package com.haijo.notes;
 
 import com.getcapacitor.BridgeActivity;
 
