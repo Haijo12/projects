@@ -7,6 +7,8 @@ import {
   TrashIcon,
   RestoreIcon,
   MoreIcon,
+  EditIcon,
+  DuplicateIcon,
 } from "./icons.jsx";
 
 function NoteCard({
@@ -55,7 +57,6 @@ function NoteCard({
     if (!touchStart.current) return;
     const dx = e.changedTouches[0].clientX - touchStart.current.x;
     const dy = Math.abs(e.changedTouches[0].clientY - touchStart.current.y);
-    // Only treat as swipe if it's a mostly-horizontal gesture
     if (Math.abs(dx) > 60 && Math.abs(dx) > dy) {
       if (dx < 0) setSwiped(true);
       else setSwiped(false);
@@ -73,7 +74,7 @@ function NoteCard({
   return (
     <>
       <div
-        className={`note-card${note.pinned ? " is-pinned" : ""}${swiped ? " swiped" : ""}${compact ? " compact" : ""}`}
+        className={`note-item${note.pinned ? " is-pinned" : ""}${swiped ? " swiped" : ""}${compact ? " compact" : ""}`}
         role="button"
         tabIndex={0}
         aria-label={`Open note ${note.title || "Untitled"}`}
@@ -95,7 +96,7 @@ function NoteCard({
         onContextMenu={handleContextMenu}
       >
         {swiped && !trashMode && (
-          <div className="note-card-actions">
+          <div className="note-item-actions">
             <button
               type="button"
               className={`action-btn${note.pinned ? " active" : ""}`}
@@ -106,7 +107,7 @@ function NoteCard({
                 setSwiped(false);
               }}
             >
-              <PinIcon filled={note.pinned} />
+              <PinIcon size={20} filled={note.pinned} />
             </button>
             <button
               type="button"
@@ -118,7 +119,7 @@ function NoteCard({
                 setSwiped(false);
               }}
             >
-              <StarIcon filled={note.favorite} />
+              <StarIcon size={20} filled={note.favorite} />
             </button>
             <button
               type="button"
@@ -130,7 +131,7 @@ function NoteCard({
                 setSwiped(false);
               }}
             >
-              <ArchiveIcon />
+              <ArchiveIcon size={20} />
             </button>
             <button
               type="button"
@@ -142,13 +143,13 @@ function NoteCard({
                 setSwiped(false);
               }}
             >
-              <TrashIcon />
+              <TrashIcon size={20} />
             </button>
           </div>
         )}
 
         {trashMode && (
-          <div className="note-card-actions">
+          <div className="note-item-actions">
             <button
               type="button"
               className="action-btn"
@@ -158,7 +159,7 @@ function NoteCard({
                 onRestore(note.id);
               }}
             >
-              <RestoreIcon />
+              <RestoreIcon size={20} />
             </button>
             <button
               type="button"
@@ -169,28 +170,28 @@ function NoteCard({
                 onDeletePermanent(note.id);
               }}
             >
-              <TrashIcon />
+              <TrashIcon size={20} />
             </button>
           </div>
         )}
 
         <div className={trashMode ? "trash-note" : ""}>
-          <div className="note-card-title">
-            <span className="note-card-title-text">{note.title || "Untitled Note"}</span>
+          <div className="note-item-title">
+            <span className="note-item-title-text">{note.title || "Untitled Note"}</span>
             {note.favorite && (
-              <span className="fav-icon" aria-label="Favorite">
-                <StarIcon filled />
+              <span className="meta-icon fav-icon" aria-label="Favorite">
+                <StarIcon size={15} filled />
               </span>
             )}
             {note.pinned && (
-              <span className="pin-icon" aria-label="Pinned">
-                <PinIcon filled />
+              <span className="meta-icon pin-icon" aria-label="Pinned">
+                <PinIcon size={15} filled />
               </span>
             )}
           </div>
-          {preview && <div className="note-card-preview">{preview}</div>}
+          {preview && <div className="note-item-preview">{preview}</div>}
           {note.tags?.length > 0 && (
-            <div className="note-card-tags">
+            <div className="note-item-tags">
               {note.tags.slice(0, 3).map((tag) => (
                 <button
                   key={tag}
@@ -206,7 +207,7 @@ function NoteCard({
               ))}
             </div>
           )}
-          <div className="note-card-meta">
+          <div className="note-item-meta">
             <span>
               {trashMode && note.deletedAt ? "Deleted " : "Updated "}
               {formatRelativeTime(trashMode ? note.deletedAt : note.updatedAt)}
@@ -227,7 +228,7 @@ function NoteCard({
                 }
               }}
             >
-              <MoreIcon />
+              <MoreIcon size={18} />
             </span>
           </div>
         </div>
@@ -252,7 +253,7 @@ function NoteCard({
                 closeMenu();
               }}
             >
-              <span className="item-icon"><PinIcon filled={note.pinned} /></span>
+              <span className="item-icon"><PinIcon size={20} filled={note.pinned} /></span>
               <span className="item-label">{note.pinned ? "Unpin" : "Pin"}</span>
             </button>
             <button
@@ -264,7 +265,7 @@ function NoteCard({
                 closeMenu();
               }}
             >
-              <span className="item-icon"><StarIcon filled={note.favorite} /></span>
+              <span className="item-icon"><StarIcon size={20} filled={note.favorite} /></span>
               <span className="item-label">{note.favorite ? "Unfavorite" : "Favorite"}</span>
             </button>
             {!trashMode && (
@@ -278,7 +279,7 @@ function NoteCard({
                     closeMenu();
                   }}
                 >
-                  <span className="item-icon">Aa</span>
+                  <span className="item-icon"><EditIcon size={20} /></span>
                   <span className="item-label">Rename</span>
                 </button>
                 <button
@@ -290,7 +291,7 @@ function NoteCard({
                     closeMenu();
                   }}
                 >
-                  <span className="item-icon">⧉</span>
+                  <span className="item-icon"><DuplicateIcon size={20} /></span>
                   <span className="item-label">Duplicate</span>
                 </button>
                 <button
@@ -302,7 +303,7 @@ function NoteCard({
                     closeMenu();
                   }}
                 >
-                  <span className="item-icon"><ArchiveIcon /></span>
+                  <span className="item-icon"><ArchiveIcon size={20} /></span>
                   <span className="item-label">Archive</span>
                 </button>
               </>
@@ -317,7 +318,7 @@ function NoteCard({
                   closeMenu();
                 }}
               >
-                <span className="item-icon"><RestoreIcon /></span>
+                <span className="item-icon"><RestoreIcon size={20} /></span>
                 <span className="item-label">Restore</span>
               </button>
             ) : (
@@ -330,7 +331,7 @@ function NoteCard({
                   closeMenu();
                 }}
               >
-                <span className="item-icon"><TrashIcon /></span>
+                <span className="item-icon"><TrashIcon size={20} /></span>
                 <span className="item-label">Move to Trash</span>
               </button>
             )}

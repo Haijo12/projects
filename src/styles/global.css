@@ -58,6 +58,34 @@ img {
   max-width: 100%;
 }
 
+/*
+ * Icon sizing architecture — root-cause fix for uncontrolled SVG growth.
+ * An SVG without explicit dimensions defaults to 300x150 in browsers, which
+ * previously produced the giant search icon. Lucide icons carry their own
+ * width/height attributes (the single source of truth); this rule only gives
+ * attribute-less SVGs a sane 1em fallback so they can never balloon.
+ */
+svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+svg:not([width]):not([height]) {
+  width: 1em;
+  height: 1em;
+}
+
+/* Subtle busy indicator for the save status */
+.spin {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 ::selection {
   background: var(--accent-soft);
 }
@@ -88,5 +116,8 @@ img {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  .spin {
+    animation: none;
   }
 }

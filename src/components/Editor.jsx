@@ -3,7 +3,8 @@ import Toolbar, { insertTextAt } from "./Toolbar.jsx";
 import BottomBar from "./BottomBar.jsx";
 import Viewer from "./Viewer.jsx";
 import CommandMenu, { SLASH_COMMANDS } from "./CommandMenu.jsx";
-import { BackIcon, MoreIcon, PinIcon, StarIcon, ArchiveIcon, TrashIcon, ExportIcon } from "./icons.jsx";
+import { ArrowLeft, MoreVertical, Check, Loader2 } from "lucide-react";
+import { PinIcon, StarIcon, ArchiveIcon, TrashIcon, ExportIcon } from "./icons.jsx";
 import { countWords, countCharacters, deriveTitleFromContent, formatRelativeTime } from "../utils/format.js";
 import { saveDraft, loadDraft, clearDraft } from "../storage/notesStore.js";
 import { updateSettings } from "../storage/settingsStore.js";
@@ -265,6 +266,19 @@ export default function Editor({
     }
   }, [online, saveState]);
 
+  const statusIcon = useMemo(() => {
+    switch (saveState) {
+      case "saving":
+        return <Loader2 size={13} className="spin" />;
+      case "saved":
+        return <Check size={13} />;
+      case "recovered":
+        return <Check size={13} />;
+      default:
+        return null;
+    }
+  }, [saveState]);
+
   const editedAgo = useMemo(() => formatRelativeTime(note.updatedAt), [note.updatedAt]);
 
   return (
@@ -279,7 +293,7 @@ export default function Editor({
             onBack();
           }}
         >
-          <BackIcon />
+          <ArrowLeft size={22} />
         </button>
         <input
           type="text"
@@ -300,7 +314,7 @@ export default function Editor({
             setOverflowOpen(true);
           }}
         >
-          <MoreIcon />
+          <MoreVertical size={22} />
         </button>
       </header>
 
@@ -342,6 +356,7 @@ export default function Editor({
         charCount={settings.charCount ? charCount : 0}
         showCounts={showCounts}
         statusText={statusText}
+        statusIcon={statusIcon}
       />
 
       <CommandMenu

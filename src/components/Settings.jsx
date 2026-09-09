@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import ConfirmDialog from "./Dialog.jsx";
 import Toast from "./Toast.jsx";
 import { BackIcon, ChevronDownIcon, ChevronRightIcon } from "./icons.jsx";
+import { Download, Upload, Trash2, X, ArrowRight } from "lucide-react";
 import { downloadJsonBackup, downloadTextFile, parseImportFile, mergeImportedNotes } from "../storage/importExport.js";
 import { buildMarkdownBundle } from "../storage/backup.js";
 import { clearAllData } from "../storage/notesStore.js";
@@ -225,15 +226,15 @@ export default function Settings({ settings, onSettingsChange, onBack, onOpenTra
           <div className="settings-group">
             <button type="button" className="setting-row" onClick={() => { downloadJsonBackup(); flash("Backup exported"); }}>
               <span className="row-label">Export all notes (JSON)</span>
-              <span className="row-value">↓</span>
+              <span className="row-value"><Download size={18} /></span>
             </button>
             <button type="button" className="setting-row" onClick={handleExportBundle}>
               <span className="row-label">Export markdown bundle</span>
-              <span className="row-value">↓</span>
+              <span className="row-value"><Download size={18} /></span>
             </button>
             <button type="button" className="setting-row" onClick={() => fileInputRef.current?.click()}>
               <span className="row-label">Import notes</span>
-              <span className="row-value">↑</span>
+              <span className="row-value"><Upload size={18} /></span>
             </button>
             <input
               ref={fileInputRef}
@@ -244,11 +245,11 @@ export default function Settings({ settings, onSettingsChange, onBack, onOpenTra
             />
             <button type="button" className="setting-row" onClick={onOpenTrash}>
               <span className="row-label">Trash</span>
-              <span className="row-value">→</span>
+              <span className="row-value"><ArrowRight size={18} /></span>
             </button>
             <button type="button" className="setting-row" onClick={() => setConfirmClear(true)}>
               <span className="row-label" style={{ color: "var(--danger)" }}>Clear local data</span>
-              <span className="row-value" style={{ color: "var(--danger)" }}>✕</span>
+              <span className="row-value" style={{ color: "var(--danger)" }}><X size={18} /></span>
             </button>
           </div>
         </section>

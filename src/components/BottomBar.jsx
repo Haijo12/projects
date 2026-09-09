@@ -1,6 +1,9 @@
-export default function BottomBar({ mode, onModeChange, wordCount, charCount, showCounts, statusText }) {
+import { PenLine, Eye } from "lucide-react";
+
+export default function BottomBar({ mode, onModeChange, wordCount, charCount, showCounts, statusText, statusIcon }) {
   const countsActive = showCounts && (wordCount > 0 || charCount > 0);
   const showInfoRow = countsActive || Boolean(statusText);
+  const isBusy = statusText === "Saving…";
 
   return (
     <>
@@ -12,9 +15,10 @@ export default function BottomBar({ mode, onModeChange, wordCount, charCount, sh
               : ""}
           </span>
           {statusText && (
-            <span className={`save-state save-${mode === "edit" && statusText === "Saving…" ? "busy" : "idle"}`}>
+            <span className={`save-state ${isBusy ? "save-busy" : "save-idle"}`}>
+              {statusIcon}
               {statusText}
-            </span>
+              </span>
           )}
         </div>
       )}
@@ -25,6 +29,7 @@ export default function BottomBar({ mode, onModeChange, wordCount, charCount, sh
           aria-selected={mode === "edit"}
           onClick={() => onModeChange("edit")}
         >
+          <PenLine size={15} />
           Edit
         </button>
         <button
@@ -33,6 +38,7 @@ export default function BottomBar({ mode, onModeChange, wordCount, charCount, sh
           aria-selected={mode === "preview"}
           onClick={() => onModeChange("preview")}
         >
+          <Eye size={15} />
           Preview
         </button>
       </div>

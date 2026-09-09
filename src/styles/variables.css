@@ -3,6 +3,7 @@
   --bg: #f4f1ea;
   --surface: #fdfbf7;
   --surface-2: #efeae0;
+  --surface-3: #e6dfd2;
   --border: #ddd6c8;
   --border-strong: #c8c0ae;
 
@@ -35,6 +36,23 @@
   --radius-lg: 20px;
   --radius-full: 999px;
 
+  /* Spacing scale — use these instead of ad-hoc margins/paddings */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+
+  /* Typography scale */
+  --fs-title: 1.375rem;    /* app title */
+  --fs-note-title: 1rem;   /* note card title */
+  --fs-preview: 0.875rem;  /* note preview text */
+  --fs-meta: 0.75rem;      /* timestamps, counts */
+  --fs-body: 0.9375rem;    /* list rows, menu items */
+  --fs-small: 0.8125rem;   /* descriptions, hints */
+
   --shadow-1: 0 1px 2px rgba(35, 30, 20, 0.05);
   --shadow-2: 0 4px 16px rgba(35, 30, 20, 0.10);
 
@@ -51,6 +69,7 @@
   --bg: #17161a;
   --surface: #211f24;
   --surface-2: #2a282e;
+  --surface-3: #34323a;
   --border: #35323a;
   --border-strong: #4a4650;
 

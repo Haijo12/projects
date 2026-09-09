@@ -19,7 +19,7 @@ export default function Trash({ notes, onRestore, onDeletePermanent, onEmptyTras
             <span className="header-spacer" />
           </div>
         </header>
-        <EmptyState icon="🗑" title="Trash is empty" hint="Deleted notes appear here first." />
+        <EmptyState icon={<TrashIcon size={44} strokeWidth={1.5} />} title="Trash is empty" hint="Deleted notes appear here first." />
       </div>
     );
   }

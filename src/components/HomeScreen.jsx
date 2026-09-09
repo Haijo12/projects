@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import NoteCard from "./NoteCard.jsx";
-import SearchBar from "./SearchBar.jsx";
 import TagFilter from "./TagFilter.jsx";
 import EmptyState from "./EmptyState.jsx";
 import { searchNotes } from "../utils/search.js";
-import { SearchIcon, SettingsIcon, PlusIcon } from "./icons.jsx";
+import { Search, Settings, ArrowLeft, X, Plus, FileText } from "lucide-react";
 
 const FILTERS = [
   { key: "all", label: "All" },
@@ -15,10 +14,7 @@ const FILTERS = [
 ];
 
 export default function HomeScreen({
-  notes, // { visibleNotes, pinnedNotes, favoriteNotes, archivedNotes, trashedNotes, tagList }
-  compact = false,
-  searchOpen = false,
-  onSearchClose,
+  notes,
   onOpenNote,
   onCreateNote,
   onTogglePin,
@@ -30,12 +26,12 @@ export default function HomeScreen({
   onRestore,
   onDeletePermanent,
   onOpenSettings,
-  onOpenCommandMenu,
   initialFilter = null,
 }) {
   const [filter, setFilter] = useState(initialFilter || "all");
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState(null);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const isTrash = filter === "trash";
   const isArchive = filter === "archive";
@@ -82,9 +78,11 @@ export default function HomeScreen({
     [filter, query, activeTag, filtered]
   );
 
-  const resultCount = query.trim() ? `${filtered.length} note${filtered.length === 1 ? "" : "s"} found` : null;
+  const resultCount = query.trim()
+    ? `${filtered.length} note${filtered.length === 1 ? "" : "s"} found`
+    : null;
 
-  // Listen for filter/tag requests coming from the command palette or editor
+  // Listen for filter/tag requests from the command palette / editor
   useEffect(() => {
     const onFilter = (e) => {
       setFilter(e.detail);
@@ -104,13 +102,10 @@ export default function HomeScreen({
     };
   }, []);
 
-  // Search overlay lives in App; when open, focus our search input
-  useEffect(() => {
-    if (searchOpen) {
-      const input = document.querySelector(".search-bar input");
-      input?.focus();
-    }
-  }, [searchOpen]);
+  function closeSearch() {
+    setSearchOpen(false);
+    setQuery("");
+  }
 
   function handleTagClick(tag) {
     setFilter("all");
@@ -130,73 +125,101 @@ export default function HomeScreen({
     trashMode: isTrash,
     onRestore,
     onDeletePermanent,
-    compact,
   };
 
   return (
     <div className="screen">
-      <header className="sticky-header safe-top">
-        <div className="app-header">
-          <h1>Notes</h1>
-          <div className="header-actions">
+      <header className="home-header safe-top">
+        {searchOpen ? (
+          <div className="search-field-row">
             <button
               type="button"
               className="icon-btn"
+              aria-label="Close search"
+              onClick={closeSearch}
+            >
+              <ArrowLeft size={22} />
+            </button>
+            <input
+              type="text"
+              className="search-input"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") closeSearch();
+              }}
+              placeholder="Search notes…"
               aria-label="Search notes"
-              onClick={() => {
-                const input = document.querySelector(".search-bar input");
-                input?.focus();
-              }}
-            >
-              <SearchIcon />
-            </button>
-            <button
-              type="button"
-              className="icon-btn"
-              aria-label="Command menu"
-              onClick={onOpenCommandMenu}
-            >
-              <span className="glyph">⌘</span>
-            </button>
-            <button
-              type="button"
-              className="icon-btn"
-              aria-label="Settings"
-              onClick={onOpenSettings}
-            >
-              <SettingsIcon />
-            </button>
+              autoComplete="off"
+            />
+            {query && (
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="Clear search row"
+                onClick={() => setQuery("")}
+              >
+                <X size={20} />
+              </button>
+            )}
           </div>
-        </div>
-        <SearchBar value={query} onChange={setQuery} onEscape={onSearchClose} />
-        <div className="filter-row" role="tablist" aria-label="Note filters">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              type="button"
-              className="chip"
-              aria-pressed={filter === f.key}
-              onClick={() => {
-                setFilter(f.key);
-                setActiveTag(null);
-              }}
-            >
-              {f.label}
-              {f.key === "trash" && notes.trashedNotes.length > 0 && (
-                <span className="chip-count">{notes.trashedNotes.length}</span>
-              )}
-              {f.key === "archive" && notes.archivedNotes.length > 0 && (
-                <span className="chip-count">{notes.archivedNotes.length}</span>
-              )}
-            </button>
-          ))}
-        </div>
-        <TagFilter
-          notes={notes.visibleNotes}
-          activeTag={activeTag}
-          onSelectTag={(t) => setActiveTag(t === activeTag ? null : t)}
-          onClear={() => setActiveTag(null)}
-        />
+        ) : (
+          <div className="app-header">
+            <h1>Notes</h1>
+            <div className="header-actions">
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="Search notes"
+                onClick={() => setSearchOpen(true)}
+              >
+                <Search size={22} />
+              </button>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="Settings"
+                onClick={onOpenSettings}
+              >
+                <Settings size={22} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!searchOpen && (
+          <div className="filter-row" role="tablist" aria-label="Note filters">
+            {FILTERS.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                className="chip"
+                aria-pressed={filter === f.key}
+                onClick={() => {
+                  setFilter(f.key);
+                  setActiveTag(null);
+                }}
+              >
+                {f.label}
+                {f.key === "trash" && notes.trashedNotes.length > 0 && (
+                  <span className="chip-count">{notes.trashedNotes.length}</span>
+                )}
+                {f.key === "archive" && notes.archivedNotes.length > 0 && (
+                  <span className="chip-count">{notes.archivedNotes.length}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {!searchOpen && (
+          <TagFilter
+            notes={notes.visibleNotes}
+            activeTag={activeTag}
+            onSelectTag={(t) => setActiveTag(t === activeTag ? null : t)}
+            onClear={() => setActiveTag(null)}
+          />
+        )}
       </header>
 
       <div className="screen-scroll">
@@ -204,7 +227,7 @@ export default function HomeScreen({
 
         {filtered.length === 0 ? (
           <EmptyState
-            icon={isTrash ? "🗑" : isArchive ? "📦" : query ? "🔍" : "📝"}
+            icon={<FileText size={44} strokeWidth={1.5} />}
             title={
               query
                 ? "No matching notes"
@@ -223,9 +246,15 @@ export default function HomeScreen({
                 ? "Try a different search."
                 : isTrash || isArchive
                   ? null
-                  : "Tap + to create your first note."
+                  : "Create your first note to get started."
             }
-          />
+          >
+            {!query && !isTrash && !isArchive && filter === "all" && !activeTag && (
+              <button type="button" className="btn btn-primary" onClick={onCreateNote}>
+                New Note
+              </button>
+            )}
+          </EmptyState>
         ) : (
           <div className="note-list">
             {pinnedSection.length > 0 && (
@@ -250,7 +279,7 @@ export default function HomeScreen({
 
       {!isTrash && (
         <button type="button" className="fab" aria-label="Create new note" onClick={onCreateNote}>
-          <PlusIcon style={{ width: 26, height: 26 }} />
+          <Plus size={24} />
         </button>
       )}
     </div>

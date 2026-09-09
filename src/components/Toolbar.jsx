@@ -1,18 +1,19 @@
 // Quick insert toolbar — operates on the textarea via a ref API.
 // insertAround wraps selection; insertAtCursor places cursor sensibly.
+import { Bold, Italic, Strikethrough, Code, SquareCode, List, ListChecks, Quote, AtSign, Link2, Heading2 } from "lucide-react";
 
 const BUTTONS = [
-  { label: "H", title: "Heading", action: "heading" },
-  { label: "B", title: "Bold", action: "bold" },
-  { label: "I", title: "Italic", action: "italic" },
-  { label: "S", title: "Strikethrough", action: "strike" },
-  { label: "</>", title: "Inline code", action: "code", mono: true },
-  { label: "◧", title: "Code block", action: "codeblock", mono: true },
-  { label: "•—", title: "List", action: "list" },
-  { label: "☑", title: "Checklist", action: "task" },
-  { label: "❝", title: "Quote", action: "quote" },
-  { label: "@", title: "Tag", action: "tag", mono: true },
-  { label: "⧉", title: "Note link", action: "wikilink" },
+  { icon: Heading2, title: "Heading", action: "heading" },
+  { icon: Bold, title: "Bold", action: "bold" },
+  { icon: Italic, title: "Italic", action: "italic" },
+  { icon: Strikethrough, title: "Strikethrough", action: "strike" },
+  { icon: Code, title: "Inline code", action: "code" },
+  { icon: SquareCode, title: "Code block", action: "codeblock" },
+  { icon: List, title: "List", action: "list" },
+  { icon: ListChecks, title: "Checklist", action: "task" },
+  { icon: Quote, title: "Quote", action: "quote" },
+  { icon: AtSign, title: "Tag", action: "tag" },
+  { icon: Link2, title: "Note link", action: "wikilink" },
 ];
 
 export const toolbarActions = {
@@ -32,16 +33,16 @@ export const toolbarActions = {
 export default function Toolbar({ onInsert }) {
   return (
     <div className="editor-toolbar" role="toolbar" aria-label="Formatting">
-      {BUTTONS.map((btn) => (
+      {BUTTONS.map(({ icon: Icon, title, action }) => (
         <button
-          key={btn.action}
+          key={action}
           type="button"
-          className={`toolbar-btn${btn.mono ? " tb-mono" : ""}`}
-          title={btn.title}
-          aria-label={`Insert ${btn.title}`}
-          onClick={() => onInsert(btn.action)}
+          className="toolbar-btn"
+          title={title}
+          aria-label={`Insert ${title}`}
+          onClick={() => onInsert(action)}
         >
-          {btn.label}
+          <Icon size={18} strokeWidth={2.2} />
         </button>
       ))}
     </div>

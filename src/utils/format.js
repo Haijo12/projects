@@ -45,21 +45,29 @@ export function deriveTitleFromContent(content) {
   return "";
 }
 
-// Short plain-text preview for cards; skips the title line
+// Short plain-text preview for the notes LIST (display only — stored note
+// content is never modified). Skips the leading heading/title line and strips
+// markdown syntax so "## Saving Test" previews as "Saving Test…".
 export function derivePreview(content, title = "", maxLen = 120) {
   if (!content) return "";
   const lines = content.split("\n").map((l) => l.trim());
-  // Skip leading heading and a line identical to the title
   let i = 0;
+  // Skip a leading heading and a line identical to the title
   if (lines[i] && lines[i].startsWith("#")) i++;
   if (title && lines[i] === title.trim()) i++;
   let text = lines
     .slice(i)
     .filter(Boolean)
     .join(" ")
-    .replace(/\[\[([^\[\]]+)\]\]/g, "$1")
-    .replace(/\[([^\]]*)\]\(([^)]*)\)/g, "$1")
-    .replace(/\*\*|__|~~|==|`/g, "")
+    .replace(/!\w+ /g, "") // callouts (!info etc.)
+    .replace(/\[\[([^\[\]]+)\]\]/g, "$1") // wikilinks
+    .replace(/\[([^\]]*)\]\(([^)]*)\)/g, "$1") // links
+    .replace(/^#+\s*/gm, "") // headings
+    .replace(/^>\s?/gm, "") // quotes
+    .replace(/^[-*+]\s+/gm, "") // list bullets
+    .replace(/^\d+\.\s+/gm, "") // numbered lists
+    .replace(/\[\s*[xX]?\s*\]\s?/g, "") // task boxes
+    .replace(/\*\*|__|~~|==|`/g, "") // emphasis markers
     .trim();
   if (text.length > maxLen) text = text.slice(0, maxLen).trimEnd() + "…";
   return text;
