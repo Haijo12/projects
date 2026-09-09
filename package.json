@@ -7,14 +7,23 @@
     "dev": "vite --host 0.0.0.0 --port $PORT",
     "dev:local": "vite",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "cap:sync": "vite build && cap sync android",
+    "cap:sync:fast": "cap sync android",
+    "android": "cap open android",
+    "android:build": "vite build && cap sync android && cd android && ./gradlew assembleDebug",
+    "android:release": "vite build && cap sync android && cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
+    "@capacitor/android": "^6.2.2",
+    "@capacitor/core": "^6.2.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.2.2",
     "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.4",
     "vite": "^5.4.8"
   }
 }
