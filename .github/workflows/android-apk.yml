@@ -4,13 +4,14 @@ name: Android APK
 # Capacitor) and uploads the generated ".apk" as a workflow artifact.
 #
 # Manual trigger:  Actions -> "Android APK" -> "Run workflow" -> Build Android app.
-# Automatic trigger: any push to "main".
+# Automatic trigger: any push to the default branch.
 
 on:
   workflow_dispatch:
   push:
     branches:
       - main
+      - arena/01a0879e-projects
 
 concurrency:
   group: android-apk-${{ github.ref }}
