@@ -165,6 +165,68 @@ device — there is no server.
 - Launches standalone, portrait, with offline caching
 - Works with no internet connection after first load
 
+## Android App (Capacitor)
+
+The same web app is packaged as an Android APK via [Capacitor](https://capacitorjs.com) — no rewrite, just a native shell loading the Vite build.
+
+### One-time setup
+
+```bash
+bun install                 # installs @capacitor/core, cli, android
+bun run build               # web build → dist/
+bunx cap sync android       # copies dist/ into the Android project
+```
+
+The Android project lives in `android/` (appId `com.haijo12.personalnotes`, app name "Personal Notes").
+
+### Build the APK locally
+
+Requires Android Studio (or the Android SDK + JDK 21):
+
+```bash
+bun run android:build       # vite build + cap sync + gradle assembleDebug
+```
+
+Or open the project in Android Studio and press Run:
+
+```bash
+bun run android             # opens android/ in Android Studio
+```
+
+The debug APK lands at:
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Get the APK from GitHub Actions
+
+Every push to `main`/`note-development` triggers the **Android APK** workflow:
+
+1. Open the repo → **Actions** tab → latest **Android APK** run
+2. Scroll to **Artifacts** → download **`personal-notes-android-apk`**
+3. Unzip it — inside is `app-debug.apk`
+4. Copy to your phone and install (enable "Install unknown apps" for the file manager)
+
+### Publish a GitHub Release
+
+Tag-based releases build the APK automatically:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The **Android Release** workflow builds the APK and attaches `PersonalNotes-1.0.0-debug.apk` to a GitHub Release. Then: **Releases → v1.0.0 → download APK → install on Android.**
+
+### Updating the app after web changes
+
+```bash
+bun run cap:sync            # rebuild web + sync into android/
+```
+
+then rebuild the APK (locally or via Actions). Web-only development (`bun run dev`) is unaffected — Capacitor only wraps the production build in `dist/`.
+
 ## GitHub Pages Deployment
 
 The Vite `base` is set to the repository name in `vite.config.js` (currently
@@ -186,6 +248,8 @@ src/
 ├── hooks/            # useNotes, useTheme, useDebounce, useStorage
 ├── utils/            # format, search, tags, links, validation
 └── styles/           # CSS variables, global, mobile, components
+android/             # Capacitor Android shell (APK builds)
+capacitor.config.ts  # appId, appName, webDir: dist
 ```
 
 The parser is fully separated from rendering (AST in, React out), and all
